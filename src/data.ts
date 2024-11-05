@@ -5,7 +5,6 @@ export type Node = {
     outDegree: number;
     x?: number;
     y?: number;
-    color?: string;
     belief?: number;
 };
 export type Link = {
@@ -39,7 +38,6 @@ export const parseCSVToNodes = (csvFile: File): Promise<{ nodes: Node[]; links: 
                         nodes.set(source, {
                             id: source,
                             outDegree: 1,
-                            color: '#FF0000', // You can customize the color as needed
                             belief,
                             x: Math.random() * 4096, // Random x position
                             y: Math.random() * 4096, // Random y position
@@ -57,15 +55,8 @@ export const parseCSVToNodes = (csvFile: File): Promise<{ nodes: Node[]; links: 
                     if (!nodes.has(target)) {
                         nodes.set(target, {
                             id: target,
-                            outDegree: 1,
-                            color: '#FF0000', // You can customize the color as needed
-
+                            outDegree: 0,
                         });
-                    } else {
-                        const existingNode = nodes.get(target);
-                        if (existingNode) {
-                            existingNode.outDegree += 1;
-                        }
                     }
 
                     if (source && target) {

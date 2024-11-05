@@ -39,21 +39,21 @@ body {
   margin: 5px;
 }
 
-.histogramWrapper {
-  margin-left: 5px;
-  border-radius: 5px;
-  background: rgb(34 34 34 / 70%);
-  padding: 3px;
-}
 
-.histogramStyle {
-  height: 50px;
-  background: none;
-}
 
 .infoStyle {
   margin: 8px;
   color: white;
   font-size: 14px;
   white-space: pre-line;
+}
+
+.MuiCardHeader-subheader{
+  color: lightgray !important;
+}
+.MuiCardHeader-avatar{
+  margin-right: 10px !important;
+}
+:root *{
+  --scrollbar-background: unset;
 }
