@@ -2,7 +2,11 @@ import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, C
 import { useCallback, useRef, useState } from 'react';
 import "../assets/styles.css";
 import { Link, Node, parseCSVToNodes } from '../data';
+import io from 'socket.io-client';
 import SelectedUserInfo from './SelectedUserInfo';
+
+const socket = io("http://localhost:5000");
+
 const InfluenceGraph = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
@@ -17,17 +21,23 @@ const InfluenceGraph = () => {
   // Colores base
   const [baseHueColor, setBaseHueColor] = useState<number>(Math.floor(Math.random() * 256));
 
-
+  
   // Event handler for uploading CSV file
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.preventDefault()
     if (file) {
-      parseCSVToNodes(file).then(({ nodes, links }) => {
-        setNodes(nodes);
-        for (const node of nodes) setMaxOutDegree(prev => (node.outDegree > prev) ? node.outDegree : prev)
-        setLinks(links);
-        for (const link of links) setMaxInfluence(prev => (link.influenceValue > prev) ? link.influenceValue : prev)
-      });
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {  // Verificación de nulidad
+          const csvBase64 = (reader.result as string).split(',')[1];
+          socket.emit('influenceGraph', { csv_data: csvBase64 }, (status: string) => {
+            console.log(status);
+          });
+          socket.on("users", nodes => setNodes(nodes)); 
+        }
+      };
+      reader.readAsDataURL(file); 
     }
   };
 
