@@ -12,67 +12,59 @@ export type Link = {
     target: string;
     influenceValue: number;
 };
+export  const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string } = { mentions_links: "Menciones", global_influence_links: "Influencia Global", local_influence_links: "Influencia Local" };
 
+export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'local_influence_links';
 
+export const initializeNodes = (ids: string[]): Node[] => {
+    return ids.map(id => ({
+        id,
+        outDegree: 0,
+        x: undefined,   // Opcional, puedes omitir estos si no los necesitas
+        y: undefined,
+        belief: undefined
+    }));
+}
 
-// Function to parse CSV and generate nodes and links
-export const parseCSVToNodes = (csvFile: File): Promise<{ nodes: Node[]; links: Link[] }> => {
-    return new Promise((resolve, reject) => {
-        Papa.parse(csvFile, {
-            header: true,
-            complete: function (results) {
-                const data = results.data;
-                const nodes = new Map<string, Node>();
-                const links: Link[] = [];
+export const processEdges = (data: Array<{ source: string; target: string; influenceValue: number }>): { nodes: Node[], links: Link[], maxOutDegree: number, maxInfluence: number } => {
+    const nodes = new Map<string, Node>();
+    const links: Link[] = [];
+    let maxOutDegree = 0;
+    let maxInfluence = 0;
+    data.forEach((row) => {
+        const { source, target, influenceValue } = row;
+        if (influenceValue > maxInfluence) maxInfluence = influenceValue;
+        // Crear o actualizar el nodo de origen con outDegree
+        if (!nodes.has(source)) {
+            nodes.set(source, {
+                id: source,
+                outDegree: 1,
+                x: Math.random() * 4096, // Posición x aleatoria
+                y: Math.random() * 4096, // Posición y aleatoria
+            });
+        } else {
+            const existingNode = nodes.get(source);
+            if (existingNode) {
+                existingNode.outDegree += 1;
+                if (existingNode.outDegree > maxOutDegree) maxOutDegree = existingNode.outDegree
+            }
+        }
 
-                data.forEach((row: any) => {
-                    const belief = parseFloat(row.belief);
+        if (!nodes.has(target)) {
+            nodes.set(target, {
+                id: target,
+                outDegree: 0,
+            });
+        }
 
-                    // Create edge between source and target
-                    const source = row.source_id;
-                    const target = row.target_id;
-                    const influenceValue = parseFloat(row.influence_value);
-
-                    // Create node if it doesn't exist
-                    if (!nodes.has(source)) {
-                        nodes.set(source, {
-                            id: source,
-                            outDegree: 1,
-                            belief,
-                            x: Math.random() * 4096, // Random x position
-                            y: Math.random() * 4096, // Random y position
-                        });
-                    } else {
-                        const existingNode = nodes.get(source);
-                        if (existingNode) {
-                            existingNode.outDegree += 1;
-                        }
-
-                    }
-
-
-                    // Create node if it doesn't exist
-                    if (!nodes.has(target)) {
-                        nodes.set(target, {
-                            id: target,
-                            outDegree: 0,
-                        });
-                    }
-
-                    if (source && target) {
-                        links.push({
-                            source,
-                            target,
-                            influenceValue,
-                        });
-                    }
-                });
-
-                resolve({ nodes: Array.from(nodes.values()), links });
-            },
-            error: function (err) {
-                reject(err);
-            },
+        
+        links.push({
+            source,
+            target,
+            influenceValue,
         });
     });
-};
+
+    // Convertir el Map de nodos a un array
+    return { nodes: Array.from(nodes.values()), links, maxOutDegree, maxInfluence };
+}

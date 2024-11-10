@@ -37,7 +37,7 @@ const nodeInfo = (props: ListChildComponentProps) => {
     const { index, style, data } = props;
     const { nodeLinks, getLinkColor, showLinkNodes } = data;
     const link = nodeLinks[index];
-    console.log(link)
+
 
     return (
         <ListItem style={style} key={index} component="div" disablePadding >
@@ -88,7 +88,6 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, getLinkColor, showLi
     const handleExpandClick = () => {
         setExpanded(!expanded);
     };
-console.log(selectedNode, nodeLinks)
     return (
         <div className="sidebarStyle">
             <div className="infoStyle">

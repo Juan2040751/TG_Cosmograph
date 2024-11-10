@@ -1,9 +1,10 @@
 import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef } from '@cosmograph/react';
 import { useCallback, useRef, useState } from 'react';
 import "../assets/styles.css";
-import { Link, Node, parseCSVToNodes } from '../data';
+import { HeuristicKey, Link, Node, initializeNodes, processEdges, heuristicLabel } from '../data';
 import io from 'socket.io-client';
 import SelectedUserInfo from './SelectedUserInfo';
+import { Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 
 const socket = io("http://localhost:5000");
 
@@ -12,7 +13,11 @@ const InfluenceGraph = () => {
   const [links, setLinks] = useState<Link[]>([]);
   const [maxOutDegree, setMaxOutDegree] = useState<number>(1);
   const [maxInfluence, setMaxInfluence] = useState<number>(0);
+  const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [] })
+  const [heuristic, setHeuristic] = useState<string>('');
+
   const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
+
   const [selectedNode, setSelectedNode] = useState<Node | undefined>();
   const search = useRef<CosmographSearchRef<Node, Link>>(null);
   const [showLabelsFor, setShowLabelsFor] = useState<Node[] | undefined>(
@@ -21,7 +26,7 @@ const InfluenceGraph = () => {
   // Colores base
   const [baseHueColor, setBaseHueColor] = useState<number>(Math.floor(Math.random() * 256));
 
-  
+
   // Event handler for uploading CSV file
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,15 +34,40 @@ const InfluenceGraph = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        if (reader.result) {  // Verificación de nulidad
+        if (reader.result) {
           const csvBase64 = (reader.result as string).split(',')[1];
           socket.emit('influenceGraph', { csv_data: csvBase64 }, (status: string) => {
-            console.log(status);
+            if (status) console.log(status);
           });
-          socket.on("users", nodes => setNodes(nodes)); 
+          socket.on("users", (ids: string[]) => {
+            const nodes = initializeNodes(ids);
+            setNodes(nodes);
+          });
+          socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number }> }) => {
+            Object.entries(heuristic).forEach(([heuristicName, heuristicLinks]) => {
+              //console.log({ heuristicName, heuristicLinks });
+              setHeuristicsLinks(prev => ({
+                ...prev,
+                [heuristicName]: heuristicLinks
+              }));
+              setLinks(prev => {
+                if (!prev.length) {
+                  const { nodes, links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks)
+                  setNodes(nodes)
+                  setMaxOutDegree(maxOutDegree);
+                  setMaxInfluence(maxInfluence);
+                  cosmographRef.current?.fitView();
+                  setHeuristic(heuristicName);
+                  return links
+                }
+                return prev
+              })
+            });
+
+          })
         }
       };
-      reader.readAsDataURL(file); 
+      reader.readAsDataURL(file);
     }
   };
 
@@ -47,6 +77,7 @@ const InfluenceGraph = () => {
     if (!node) return `hsl(${baseHueColor}, 0%, 100%)`
     const saturation = Math.round(node.outDegree / maxOutDegree * 100) + 20;
     const newLightness = 100 - saturation / 2;
+
     return `hsl(${baseHueColor}, ${saturation}%, ${newLightness}%)`;
   };
   const getLinkColor = (link: Link) => {
@@ -82,28 +113,58 @@ const InfluenceGraph = () => {
   const showLinkNodes = (link: Link) => {
     const source = nodes.find(n => n.id === link.source)
     const target = nodes.find(n => n.id === link.target)
-    console.log("he", source, target)
     if (source && target) {
       setShowLabelsFor([source, target])
       cosmographRef.current?.selectNodes([source, target])
       cosmographRef.current?.fitViewByNodeIds([source.id, target.id])
     }
   }
+  const handleChangeHeuristic = (event: SelectChangeEvent) => {
+    const heuristicName: string = event.target.value
+    const { nodes, links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName as HeuristicKey])
+    console.log( maxOutDegree, maxInfluence )
+    setNodes(nodes);
+    setLinks(links);
+    setMaxOutDegree(maxOutDegree);
+    setMaxInfluence(maxInfluence);
+    cosmographRef.current?.fitView();
+    setHeuristic(event.target.value);
+  }
+
   return (
-    <div>
-      <input type="file" onChange={handleFileUpload} accept=".csv" />
+    <div style={{ height: "91.6%" }}>
       <CosmographProvider
         nodes={nodes}
         links={links}
       >
-        <CosmographSearch
-          ref={search}
-          className="searchStyle"
-          onSelectResult={onSearchSelectResult}
-          maxVisibleItems={20}
-        />
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 16px" }}>
+          <input type="file" onChange={handleFileUpload} accept=".csv" />
+          <CosmographSearch
+            ref={search}
+            className='searchStyle'
+            onSelectResult={onSearchSelectResult}
+            maxVisibleItems={20}
+          />
+          <Box sx={{ minWidth: 200 }}>
+            <FormControl fullWidth variant='standard'>
+              <InputLabel id="demo-simple-select-label">Heuristica</InputLabel>
+              <Select
+                value={heuristic}
+                label="Heuristica"
+                onChange={handleChangeHeuristic}
+              >
+                {Object.keys(heuristicsLinks).map((heuristicName: string) =>
+                  <MenuItem value={heuristicName} disabled={!heuristicsLinks[heuristicName as HeuristicKey].length} key={heuristicName}>
+                    {heuristicLabel[heuristicName as HeuristicKey]}
+                  </MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
+
         <Cosmograph
           ref={cosmographRef}
+          className='cosmographStyle'
           //spaceSize={4096}
           curvedLinks
           onClick={onCosmographClick}
@@ -142,5 +203,6 @@ const InfluenceGraph = () => {
     </div>
   );
 };
+
 
 export default InfluenceGraph;
