@@ -12,7 +12,7 @@ export type Link = {
     target: string;
     influenceValue: number;
 };
-export  const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string } = { mentions_links: "Menciones", global_influence_links: "Influencia Global", local_influence_links: "Influencia Local" };
+export const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string } = { mentions_links: "Menciones", global_influence_links: "Influencia Global", local_influence_links: "Influencia Local" };
 
 export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'local_influence_links';
 
@@ -26,38 +26,44 @@ export const initializeNodes = (ids: string[]): Node[] => {
     }));
 }
 
-export const processEdges = (data: Array<{ source: string; target: string; influenceValue: number }>): { nodes: Node[], links: Link[], maxOutDegree: number, maxInfluence: number } => {
-    const nodes = new Map<string, Node>();
+export const processEdges = (
+    data: Array<{ source: string; target: string; influenceValue: number }>,
+    setNodes: React.Dispatch<React.SetStateAction<Node[]>>
+): { links: Link[], maxOutDegree: number, maxInfluence: number } => {
+
     const links: Link[] = [];
     let maxOutDegree = 0;
     let maxInfluence = 0;
+
+
+    const tempNodeData = new Map<string, { outDegree: number, x: number, y: number }>();
+
     data.forEach((row) => {
         const { source, target, influenceValue } = row;
+
         if (influenceValue > maxInfluence) maxInfluence = influenceValue;
-        // Crear o actualizar el nodo de origen con outDegree
-        if (!nodes.has(source)) {
-            nodes.set(source, {
-                id: source,
+        if (!tempNodeData.has(source)) {
+            tempNodeData.set(source, {
                 outDegree: 1,
-                x: Math.random() * 4096, // Posición x aleatoria
-                y: Math.random() * 4096, // Posición y aleatoria
+                x: Math.random() * 4096,
+                y: Math.random() * 4096
             });
         } else {
-            const existingNode = nodes.get(source);
-            if (existingNode) {
-                existingNode.outDegree += 1;
-                if (existingNode.outDegree > maxOutDegree) maxOutDegree = existingNode.outDegree
+            const existingData = tempNodeData.get(source);
+            if (existingData) {
+                existingData.outDegree += 1;
+                maxOutDegree = Math.max(maxOutDegree, existingData.outDegree);
             }
         }
 
-        if (!nodes.has(target)) {
-            nodes.set(target, {
-                id: target,
+        if (!tempNodeData.has(target)) {
+            tempNodeData.set(target, {
                 outDegree: 0,
+                x: Math.random() * 4096,
+                y: Math.random() * 4096
             });
         }
 
-        
         links.push({
             source,
             target,
@@ -65,6 +71,30 @@ export const processEdges = (data: Array<{ source: string; target: string; influ
         });
     });
 
-    // Convertir el Map de nodos a un array
-    return { nodes: Array.from(nodes.values()), links, maxOutDegree, maxInfluence };
+
+    setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+            const tempData = tempNodeData.get(node.id);
+            if (tempData) {
+                return {
+                    ...node,
+                    outDegree: tempData.outDegree,
+                    x: node.x ?? tempData.x,  // Mantener posición si ya existe, de lo contrario usar nueva
+                    y: node.y ?? tempData.y,  // Mantener posición si ya existe, de lo contrario usar nueva
+                };
+            }
+            return node;
+        })
+    );
+
+    return { links, maxOutDegree, maxInfluence };
+};
+
+export const processStance = (stances: { [key: string]: number }, setNodes: React.Dispatch<React.SetStateAction<Node[]>>) => {
+    setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+            node["belief"]=stances[node.id]
+            return node
+        })
+    );
 }

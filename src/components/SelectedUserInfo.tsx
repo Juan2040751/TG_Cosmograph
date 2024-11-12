@@ -1,16 +1,16 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import { Avatar, Card, CardContent, CardHeader, Collapse, IconButton, IconButtonProps, ListItem, ListItemAvatar, ListItemButton, ListItemText, styled } from '@mui/material';
+import { Avatar, Card, CardContent, CardHeader, Collapse, IconButton, IconButtonProps, ListItem, ListItemAvatar, ListItemButton, ListItemText, styled, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress, {
     CircularProgressProps,
 } from '@mui/material/CircularProgress';
-import { useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import "../assets/styles.css";
 import { Link, Node } from '../data';
 function CircularProgressWithLabel(
-    props: CircularProgressProps & { value: number, backColor: string },
+    props: CircularProgressProps & { value: number | undefined, backColor: string, children: JSX.Element | JSX.Element[] },
 ) {
     return (
         <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -27,7 +27,7 @@ function CircularProgressWithLabel(
                     justifyContent: 'center',
                 }}
             >
-                <SupervisorAccountIcon />
+                {props.children}
             </Box>
         </Box>
     );
@@ -35,7 +35,7 @@ function CircularProgressWithLabel(
 
 const nodeInfo = (props: ListChildComponentProps) => {
     const { index, style, data } = props;
-    const { nodeLinks, getLinkColor, showLinkNodes } = data;
+    const { nodeLinks, nodeColor, showLinkNodes } = data;
     const link = nodeLinks[index];
 
 
@@ -43,10 +43,12 @@ const nodeInfo = (props: ListChildComponentProps) => {
         <ListItem style={style} key={index} component="div" disablePadding >
             <ListItemButton sx={{ padding: "2px 16px" }} onClick={() => showLinkNodes(link)}>
                 <ListItemAvatar sx={{ minWidth: "50px" }}>
-                    <CircularProgressWithLabel value={(link?.influenceValue * 100)} backColor={getLinkColor(link)} />
+                    <CircularProgressWithLabel value={(link?.influenceValue * 100)} backColor={nodeColor}>
+                        <SupervisorAccountIcon />
+                    </CircularProgressWithLabel>
                 </ListItemAvatar>
                 <ListItemText
-                    primary={`@${link.target}`}
+                    primary={`@${link?.target}`}
                     secondary={`Influencia: ${(link.influenceValue * 100).toFixed(1)}%`}
                     sx={{ margin: "0" }}
                 />
@@ -56,9 +58,11 @@ const nodeInfo = (props: ListChildComponentProps) => {
     );
 }
 
-const SelectedUserInfo = ({ selectedNode, nodeColor, links, getLinkColor, showLinkNodes }: { selectedNode: Node, nodeColor: string, links: Link[], getLinkColor: (Link: Link) => string, showLinkNodes: (link: Link) => void }) => {
+const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes }: { selectedNode: Node, nodeColor: string, links: Link[], getLinkColor: (Link: Link) => string, showLinkNodes: (link: Link) => void }) => {
     const [expanded, setExpanded] = useState(false);
-    const nodeLinks: Link[] = links.filter(link => link.source === selectedNode?.id);
+    const nodeLinks: Link[] = links
+        .filter(link => link.source === selectedNode?.id)
+        .sort((a, b) => a.target.localeCompare(b.target));
     interface ExpandMoreProps extends IconButtonProps {
         expand: boolean;
     }
@@ -96,7 +100,12 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, getLinkColor, showLi
                         <CardHeader
                             sx={{ padding: "4px" }}
                             avatar={
-                                <Avatar aria-label="recipe" sx={{ bgcolor: nodeColor }} />
+                                <CircularProgressWithLabel value={selectedNode.belief ? selectedNode.belief * 100 : 0} backColor={nodeColor}>
+                                    <Typography
+                                        variant="caption"
+                                        component="div"
+                                        sx={{ color: 'text.secondary' }}
+                                    >{`${selectedNode.belief ? selectedNode.belief * 100 : ''}%`}</Typography></CircularProgressWithLabel>
                             }
                             title={`@${selectedNode?.id}`}
                             subheader={`${selectedNode?.outDegree} nodos influenciados`}
@@ -116,7 +125,7 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, getLinkColor, showLi
                             width={300}
                             itemSize={46}
                             itemCount={selectedNode?.outDegree}
-                            itemData={{ nodeLinks, getLinkColor, showLinkNodes }}
+                            itemData={{ nodeLinks, nodeColor, showLinkNodes }}
                             style={{ width: "100%", overflowY: "scroll" }}
                         >
                             {nodeInfo}

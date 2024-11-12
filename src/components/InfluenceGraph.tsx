@@ -1,10 +1,10 @@
 import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef } from '@cosmograph/react';
-import { useCallback, useRef, useState } from 'react';
-import "../assets/styles.css";
-import { HeuristicKey, Link, Node, initializeNodes, processEdges, heuristicLabel } from '../data';
-import io from 'socket.io-client';
-import SelectedUserInfo from './SelectedUserInfo';
 import { Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import io from 'socket.io-client';
+import "../assets/styles.css";
+import { HeuristicKey, Link, Node, heuristicLabel, initializeNodes, processEdges, processStance } from '../data';
+import SelectedUserInfo from './SelectedUserInfo';
 
 const socket = io("http://localhost:5000");
 
@@ -15,7 +15,7 @@ const InfluenceGraph = () => {
   const [maxInfluence, setMaxInfluence] = useState<number>(0);
   const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
-
+  //const [stances, setStances] = useState<{ stance: number }>()
   const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
 
   const [selectedNode, setSelectedNode] = useState<Node | undefined>();
@@ -45,15 +45,15 @@ const InfluenceGraph = () => {
           });
           socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number }> }) => {
             Object.entries(heuristic).forEach(([heuristicName, heuristicLinks]) => {
-              //console.log({ heuristicName, heuristicLinks });
               setHeuristicsLinks(prev => ({
                 ...prev,
                 [heuristicName]: heuristicLinks
               }));
+              console.log({ heuristicName, heuristicLinks })
+
               setLinks(prev => {
                 if (!prev.length) {
-                  const { nodes, links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks)
-                  setNodes(nodes)
+                  const { links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks, setNodes)
                   setMaxOutDegree(maxOutDegree);
                   setMaxInfluence(maxInfluence);
                   cosmographRef.current?.fitView();
@@ -63,8 +63,9 @@ const InfluenceGraph = () => {
                 return prev
               })
             });
-
           })
+          socket.on("stance_heuristic", stances => { processStance(stances, setNodes); console.log(stances) }
+          )
         }
       };
       reader.readAsDataURL(file);
@@ -91,6 +92,7 @@ const InfluenceGraph = () => {
     search?.current?.clearInput();
     if (n) {
       cosmographRef.current?.selectNode(n);
+      console.log(n)
       setShowLabelsFor([n]);
       setSelectedNode(n);
     } else {
@@ -121,9 +123,8 @@ const InfluenceGraph = () => {
   }
   const handleChangeHeuristic = (event: SelectChangeEvent) => {
     const heuristicName: string = event.target.value
-    const { nodes, links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName as HeuristicKey])
-    console.log( maxOutDegree, maxInfluence )
-    setNodes(nodes);
+    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName as HeuristicKey], setNodes)
+    console.log(maxOutDegree, maxInfluence)
     setLinks(links);
     setMaxOutDegree(maxOutDegree);
     setMaxInfluence(maxInfluence);
@@ -132,7 +133,7 @@ const InfluenceGraph = () => {
   }
 
   return (
-    <div style={{ height: "91.6%" }}>
+    <div style={{ height: "100%" }}>
       <CosmographProvider
         nodes={nodes}
         links={links}
@@ -145,13 +146,14 @@ const InfluenceGraph = () => {
             onSelectResult={onSearchSelectResult}
             maxVisibleItems={20}
           />
-          <Box sx={{ minWidth: 200 }}>
+          <Box sx={{ minWidth: 200, color: "text.primary" }}>
             <FormControl fullWidth variant='standard'>
-              <InputLabel id="demo-simple-select-label">Heuristica</InputLabel>
+              <InputLabel>Heuristica</InputLabel>
               <Select
                 value={heuristic}
                 label="Heuristica"
                 onChange={handleChangeHeuristic}
+                sx={{ color: "text.primary" }}
               >
                 {Object.keys(heuristicsLinks).map((heuristicName: string) =>
                   <MenuItem value={heuristicName} disabled={!heuristicsLinks[heuristicName as HeuristicKey].length} key={heuristicName}>
@@ -183,8 +185,8 @@ const InfluenceGraph = () => {
           linkVisibilityDistanceRange={[0, 20]}
 
           simulationGravity={0}
-          simulationRepulsion={5}
-          simulationRepulsionTheta={0}
+          simulationRepulsion={6}
+          simulationRepulsionTheta={maxOutDegree ? 0 : -1}
           simulationLinkSpring={0.1}
           simulationLinkDistance={20}
           simulationFriction={0.2}
@@ -198,7 +200,7 @@ const InfluenceGraph = () => {
         />
 
       </CosmographProvider>
-      {selectedNode ? <SelectedUserInfo selectedNode={selectedNode} nodeColor={getNodeColor(selectedNode)} links={links} getLinkColor={getLinkColor} showLinkNodes={showLinkNodes} /> : <></>}
+      {selectedNode ? <SelectedUserInfo selectedNode={selectedNode} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} links={links} getLinkColor={getLinkColor} showLinkNodes={showLinkNodes} /> : <></>}
 
     </div>
   );

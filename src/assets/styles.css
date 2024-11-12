@@ -17,8 +17,9 @@ body {
 
 .cosmographStyle {
   overflow: auto;
-  height: 100% ;
+  height: calc(100% - 68px) ;
   display: flex;
+
 }
 
 
@@ -26,7 +27,6 @@ body {
 .searchStyle{
   width: 100%;
   margin-inline: 10px;
-  background-color: white;
 }
 
 .sidebarStyle {
