@@ -7,7 +7,7 @@ import CircularProgress, {
 } from '@mui/material/CircularProgress';
 import { ReactElement, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import "../assets/styles.css";
+import "./styles.css";
 import { Link, Node } from '../data';
 function CircularProgressWithLabel(
     props: CircularProgressProps & { value: number | undefined, backColor: string, children: JSX.Element | JSX.Element[] },

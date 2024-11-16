@@ -1,28 +1,24 @@
 body {
   margin: 0px;
+  overflow: inherit;
 }
 
-#root {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
 
 .wrapper {
-  height: 100%;
   display: flex;
   flex-flow: column;
   background: var(--cosmograph-search-input-background);
 }
 
 .cosmographStyle {
-  overflow: auto;
-  height: calc(100% - 68px) ;
   display: flex;
-
+  height: calc(100dvh - 168px) !important;
 }
 
 
+.timelineStyle {
+  height: 100px;
+}
 
 .searchStyle{
   width: 100%;
@@ -53,6 +49,7 @@ body {
 .MuiCardHeader-avatar{
   margin-right: 10px !important;
 }
-:root *{
-  --scrollbar-background: unset;
+
+.MuiAccordionSummary-content{
+  margin: 0 !important;
 }

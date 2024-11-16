@@ -1,10 +1,11 @@
-import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef } from '@cosmograph/react';
+import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef, CosmographTimeline, CosmographTimelineRef } from '@cosmograph/react';
 import { Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { useCallback, useRef, useState } from 'react';
 import io from 'socket.io-client';
-import "../assets/styles.css";
+import "./styles.css";
 import { HeuristicKey, Link, Node, heuristicLabel, initializeNodes, processEdges, processStance } from '../data';
 import SelectedUserInfo from './SelectedUserInfo';
+import HeuristicInfo from './HeuristicInfo';
 
 const socket = io("http://localhost:5000");
 
@@ -13,13 +14,14 @@ const InfluenceGraph = () => {
   const [links, setLinks] = useState<Link[]>([]);
   const [maxOutDegree, setMaxOutDegree] = useState<number>(1);
   const [maxInfluence, setMaxInfluence] = useState<number>(0);
-  const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [] })
+  const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[], affinities_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [], affinities_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
   //const [stances, setStances] = useState<{ stance: number }>()
   const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
 
   const [selectedNode, setSelectedNode] = useState<Node | undefined>();
   const search = useRef<CosmographSearchRef<Node, Link>>(null);
+  const timeline = useRef<CosmographTimelineRef<Link>>();
   const [showLabelsFor, setShowLabelsFor] = useState<Node[] | undefined>(
     undefined
   );
@@ -92,6 +94,7 @@ const InfluenceGraph = () => {
     search?.current?.clearInput();
     if (n) {
       cosmographRef.current?.selectNode(n);
+
       console.log(n)
       setShowLabelsFor([n]);
       setSelectedNode(n);
@@ -133,7 +136,7 @@ const InfluenceGraph = () => {
   }
 
   return (
-    <div style={{ height: "100%" }}>
+    <Box sx={{ height: "100px !important" }}>
       <CosmographProvider
         nodes={nodes}
         links={links}
@@ -163,46 +166,78 @@ const InfluenceGraph = () => {
             </FormControl>
           </Box>
         </Box>
+        <Box sx={{ position: "relative" }}>
+          <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} />
 
-        <Cosmograph
-          ref={cosmographRef}
-          className='cosmographStyle'
-          //spaceSize={4096}
-          curvedLinks
-          onClick={onCosmographClick}
-          showLabelsFor={showLabelsFor}
-          simulationCenter={-1}
+          <Cosmograph
+            ref={cosmographRef}
+            className='cosmographStyle'
+            spaceSize={8192}
+            curvedLinks
+            onClick={onCosmographClick}
+            showLabelsFor={showLabelsFor}
+            simulationCenter={-1}
 
-          nodeSize={(node: Node) => node.outDegree / 1.5}
-          nodeColor={getNodeColor}
-          nodeLabelColor={"white"}
-          hoveredNodeLabelColor={`hsl(${baseHueColor}, 100%, 50%)`}
-          linkWidthScale={1}
-          linkArrowsSizeScale={1}
-          linkArrows
-          linkWidth={(link: Link) => link.influenceValue || 0.1}
-          linkColor={getLinkColor}
-          linkVisibilityDistanceRange={[0, 20]}
+            nodeSize={(node: Node) => node.outDegree / 1.5}
+            nodeColor={getNodeColor}
+            nodeLabelColor={"white"}
+            hoveredNodeLabelColor={`hsl(${baseHueColor}, 100%, 50%)`}
+            linkWidthScale={1}
+            linkArrowsSizeScale={1}
+            linkArrows
+            linkWidth={(link: Link) => link.influenceValue || 0.1}
+            linkColor={getLinkColor}
+            linkVisibilityDistanceRange={[0, 20]}
 
-          simulationGravity={0}
-          simulationRepulsion={6}
-          simulationRepulsionTheta={maxOutDegree ? 0 : -1}
-          simulationLinkSpring={0.1}
-          simulationLinkDistance={20}
-          simulationFriction={0.2}
+            simulationGravity={0}
+            simulationRepulsion={6}
+            simulationRepulsionTheta={maxOutDegree ? 0 : -1}
+            simulationLinkSpring={0.1}
+            simulationLinkDistance={20}
+            simulationFriction={0.2}
 
-          disableSimulation={false}
-          renderHoveredNodeRing
-          showHoveredNodeLabel
+            disableSimulation={false}
+            renderHoveredNodeRing
+            showHoveredNodeLabel
 
-          showTopLabelsValueKey={'outDegree'}
+            showTopLabelsValueKey={'outDegree'}
 
-        />
+          />
+          <CosmographTimeline
+            className={'timelineStyle'}
+            ref={timeline}
+            accessor={(link: Link) => {
+              if (!link || !link.date || link.date.length === 0) {
+                return 0
+              }
+              const mostRecentDate: Date = link.date.reduce((latest: Date, currentDate: string) => {
+                const current = new Date(currentDate);
+                return current > latest ? current : latest;
+              }, new Date(link.date[0]));
+              return mostRecentDate;
+            }}
+            style={{ "--cosmograph-timeline-bar-color": `hsl(${baseHueColor}, 100%, 50%)` }}
+            animationSpeed={20}
+            barTopMargin={14}
+            showAnimationControls
+            onBarHover={(e) => {
+              const target = (e as any).target;
+              console.log({target})
+              const count = target.__data__?.count;
+              if (count !== undefined) {
+                console.log(count);
+
+              }
+            }}
+            allowSelection={false}
+            barCount={100}
+          />
+        </Box>
 
       </CosmographProvider>
       {selectedNode ? <SelectedUserInfo selectedNode={selectedNode} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} links={links} getLinkColor={getLinkColor} showLinkNodes={showLinkNodes} /> : <></>}
 
-    </div>
+    </Box>
   );
 };
 

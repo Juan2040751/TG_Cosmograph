@@ -1,4 +1,3 @@
-import Papa from 'papaparse';
 // Define the types
 export type Node = {
     id: string;
@@ -11,10 +10,11 @@ export type Link = {
     source: string;
     target: string;
     influenceValue: number;
+    date?: string[];
 };
-export const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string } = { mentions_links: "Menciones", global_influence_links: "Influencia Global", local_influence_links: "Influencia Local" };
+export const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string, affinities_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", local_influence_links: "Popularidad Relativa", affinities_links: "Afinidad" };
 
-export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'local_influence_links';
+export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'local_influence_links' | 'affinities_links';
 
 export const initializeNodes = (ids: string[]): Node[] => {
     return ids.map(id => ({
@@ -27,7 +27,7 @@ export const initializeNodes = (ids: string[]): Node[] => {
 }
 
 export const processEdges = (
-    data: Array<{ source: string; target: string; influenceValue: number }>,
+    data: Array<{ source: string; target: string; influenceValue: number, date?: string[] | undefined }>,
     setNodes: React.Dispatch<React.SetStateAction<Node[]>>
 ): { links: Link[], maxOutDegree: number, maxInfluence: number } => {
 
@@ -39,7 +39,7 @@ export const processEdges = (
     const tempNodeData = new Map<string, { outDegree: number, x: number, y: number }>();
 
     data.forEach((row) => {
-        const { source, target, influenceValue } = row;
+        const { source, target, influenceValue, date } = row;
 
         if (influenceValue > maxInfluence) maxInfluence = influenceValue;
         if (!tempNodeData.has(source)) {
@@ -68,6 +68,7 @@ export const processEdges = (
             source,
             target,
             influenceValue,
+            date
         });
     });
 
@@ -93,7 +94,7 @@ export const processEdges = (
 export const processStance = (stances: { [key: string]: number }, setNodes: React.Dispatch<React.SetStateAction<Node[]>>) => {
     setNodes((prevNodes) =>
         prevNodes.map((node) => {
-            node["belief"]=stances[node.id]
+            node["belief"] = stances[node.id]
             return node
         })
     );
