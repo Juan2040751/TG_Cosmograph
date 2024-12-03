@@ -21,7 +21,7 @@ const HeuristicInfo = ({ heuristicLabel, nodeColor }: { heuristicLabel: string |
         },
         "Afinidad": {
             description: "Red de similitud de opiniones",
-            influenceRelation: "La influencia entre usuarios se basa en la similitud de sus posturas frente al tema"
+            influenceRelation: "La influencia entre usuarios se basa en la similitud de sus opiniones frente al tema, considerando su sintaxis y semántica"
         }
     }
     const heuristicDetails = heuristicLabel ? heuristicsDescriptions[heuristicLabel as ("Interacciones" | "Popularidad" | "Popularidad Relativa" | "Afinidad")] : undefined

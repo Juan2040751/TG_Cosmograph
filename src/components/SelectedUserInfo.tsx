@@ -1,14 +1,14 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import { Avatar, Card, CardContent, CardHeader, Collapse, IconButton, IconButtonProps, ListItem, ListItemAvatar, ListItemButton, ListItemText, styled, Typography } from '@mui/material';
+import { Card, CardContent, CardHeader, Collapse, IconButton, IconButtonProps, ListItem, ListItemAvatar, ListItemButton, ListItemText, styled, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress, {
     CircularProgressProps,
 } from '@mui/material/CircularProgress';
-import { ReactElement, useState } from 'react';
+import { useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import "./styles.css";
 import { Link, Node } from '../data';
+import "./styles.css";
 function CircularProgressWithLabel(
     props: CircularProgressProps & { value: number | undefined, backColor: string, children: JSX.Element | JSX.Element[] },
 ) {
@@ -35,15 +35,17 @@ function CircularProgressWithLabel(
 
 const nodeInfo = (props: ListChildComponentProps) => {
     const { index, style, data } = props;
-    const { nodeLinks, nodeColor, showLinkNodes } = data;
+    const { nodeLinks, nodeColor, showLinkNodes, digraph } = data;
     const link = nodeLinks[index];
 
-
+    if (!link) {
+        return <></>;
+    }
     return (
         <ListItem style={style} key={index} component="div" disablePadding >
             <ListItemButton sx={{ padding: "2px 16px" }} onClick={() => showLinkNodes(link)}>
                 <ListItemAvatar sx={{ minWidth: "50px" }}>
-                    <CircularProgressWithLabel value={(link?.influenceValue * 100)} backColor={nodeColor}>
+                    <CircularProgressWithLabel value={(link?.influenceValue * 100)} backColor={digraph ? nodeColor : `hsl(${link?.influenceValue < 0 ? 0 : 100}, 100%, 50%)`}>
                         <SupervisorAccountIcon />
                     </CircularProgressWithLabel>
                 </ListItemAvatar>
@@ -58,7 +60,7 @@ const nodeInfo = (props: ListChildComponentProps) => {
     );
 }
 
-const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes }: { selectedNode: Node, nodeColor: string, links: Link[], getLinkColor: (Link: Link) => string, showLinkNodes: (link: Link) => void }) => {
+const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes, digraph }: { selectedNode: Node, nodeColor: string, links: Link[], getLinkColor: (Link: Link) => string, showLinkNodes: (link: Link) => void, digraph: boolean }) => {
     const [expanded, setExpanded] = useState(false);
     const nodeLinks: Link[] = links
         .filter(link => link.source === selectedNode?.id)
@@ -108,7 +110,7 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes }: { s
                                     >{`${selectedNode.belief ? selectedNode.belief * 100 : ''}%`}</Typography></CircularProgressWithLabel>
                             }
                             title={`@${selectedNode?.id}`}
-                            subheader={`${selectedNode?.outDegree} nodos influenciados`}
+                            subheader={`${selectedNode?.outDegree} nodos influenciados\n${selectedNode.belief ? selectedNode.belief * 100 : ''}% de acuerdo`}
                         />
                         <ExpandMore
                             expand={expanded}
@@ -122,10 +124,10 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes }: { s
                     <Collapse in={expanded} timeout="auto" unmountOnExit sx={{ width: '100%', height: 400, maxWidth: 360, bgcolor: 'background.paper' }}>
                         <FixedSizeList
                             height={400}
-                            width={300}
+                            width={360}
                             itemSize={46}
                             itemCount={selectedNode?.outDegree}
-                            itemData={{ nodeLinks, nodeColor, showLinkNodes }}
+                            itemData={{ nodeLinks, nodeColor, showLinkNodes, digraph }}
                             style={{ width: "100%", overflowY: "scroll" }}
                         >
                             {nodeInfo}
