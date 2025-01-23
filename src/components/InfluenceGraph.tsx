@@ -1,14 +1,17 @@
-import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef, CosmographTimeline, CosmographTimelineRef } from '@cosmograph/react';
-import { Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearch, CosmographSearchInputConfig, CosmographSearchRef } from '@cosmograph/react';
+import { Alert, Box, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Snackbar, SnackbarCloseReason } from '@mui/material';
+import { SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
-import "./styles.css";
 import { HeuristicKey, Link, Node, heuristicLabel, initializeNodes, processEdges, processStance } from '../data';
-import SelectedUserInfo from './SelectedUserInfo';
 import HeuristicInfo from './HeuristicInfo';
+import SelectedUserInfo from './SelectedUserInfo';
+import "./styles.css";
 import Timeline from './Timeline';
 
-const socket = io("http://localhost:5000");
+const socket = io("http://localhost:5000", {
+  transports: ['websocket'],
+  upgrade: false
+});
 
 const InfluenceGraph = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -18,6 +21,7 @@ const InfluenceGraph = () => {
   const [digraph, setDigraph] = useState<boolean>(true);
   const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[], affinities_links: Link[], agreement_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [], affinities_links: [], agreement_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
+  const [preprocess_error, setPreprocess_error] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
 
   const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
 
@@ -43,6 +47,7 @@ const InfluenceGraph = () => {
           socket.emit('influenceGraph', { csv_data: csvBase64 }, (status: string) => {
             if (status) console.log(status);
           });
+          socket.on("preprocess_error", (errorMessage: string) => setPreprocess_error({ open: true, message: errorMessage }))
           socket.on("users", (ids: string[]) => {
             const nodes = initializeNodes(ids);
             setNodes(nodes);
@@ -98,8 +103,6 @@ const InfluenceGraph = () => {
     search?.current?.clearInput();
     if (n) {
       cosmographRef.current?.zoomToNode(n)
-      const adjancentNodes: Node[] = cosmographRef.current?.getAdjacentNodes(n.id) ?? []
-      
       cosmographRef.current?.selectNode(n);
       setShowLabelsFor([n]);
       setSelectedNode(n);
@@ -141,18 +144,28 @@ const InfluenceGraph = () => {
     cosmographRef.current?.fitView();
     cosmographRef.current?.setZoomLevel(0.2, 3000)
     setHeuristic(event.target.value);
-    
+
     //setShowLabelsFor(undefined);
     //setSelectedNode(undefined);
   }
-useEffect(()=>{
-  if (selectedNode){
-    const updatedNode = nodes.find(node => node.id === selectedNode.id)
-    if (updatedNode){
-      setSelectedNode(updatedNode)
+  useEffect(() => {
+    if (selectedNode) {
+      const updatedNode = nodes.find(node => node.id === selectedNode.id)
+      if (updatedNode) {
+        setSelectedNode(updatedNode)
+      }
     }
-  }
-}, [nodes])
+  }, [nodes])
+  const handleClose = (
+    event?: SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setPreprocess_error({ open: false, message: "" });
+  };
 
   return (
     <Box sx={{ height: "100px !important" }}>
@@ -186,8 +199,18 @@ useEffect(()=>{
           </Box>
         </Box>
         <Box sx={{ position: "relative" }}>
-          <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} />
 
+          <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} />
+          <Snackbar open={preprocess_error.open} autoHideDuration={30000} onClose={handleClose}>
+            <Alert
+              onClose={handleClose}
+              severity="error"
+              variant="filled"
+              sx={{ width: '100%' }}
+            >
+              {preprocess_error.message}
+            </Alert>
+          </Snackbar>
           <Cosmograph
             ref={cosmographRef}
             className='cosmographStyle'
@@ -206,7 +229,7 @@ useEffect(()=>{
             linkArrows={digraph}
             linkWidth={(link: Link) => Math.abs(link.influenceValue) || 0.1}
             linkColor={getLinkColor}
-            
+
             simulationGravity={0.5}
             simulationRepulsion={200}//
             simulationRepulsionTheta={1}//1
