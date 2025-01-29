@@ -7,6 +7,7 @@ import HeuristicInfo from './HeuristicInfo';
 import SelectedUserInfo from './SelectedUserInfo';
 import "./styles.css";
 import Timeline from './Timeline';
+import StanceFeedback from './StanceFeedback';
 
 const socket = io("http://localhost:5000", {
   transports: ['websocket'],
@@ -21,8 +22,10 @@ const InfluenceGraph = () => {
   const [digraph, setDigraph] = useState<boolean>(true);
   const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[], affinities_links: Link[], agreement_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [], affinities_links: [], agreement_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
-  const [preprocess_error, setPreprocess_error] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
+  const [preprocessError, setPreprocessError] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
 
+  const [stanceProgress, setStanceProgress] = useState<{ users: number, progress: number, processing: number, open: boolean, estimatedTime: number, batches: number }>({ users: 0, progress: 0, processing: 0, open: false, estimatedTime: 60, batches: 0 });
+  const [affinityProgress, setAffinityProgress] = useState<{ users: number, progress: number, open: boolean }>({ users: 0, progress: 0, open: false });
   const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
 
   const [selectedNode, setSelectedNode] = useState<Node | undefined>();
@@ -47,7 +50,7 @@ const InfluenceGraph = () => {
           socket.emit('influenceGraph', { csv_data: csvBase64 }, (status: string) => {
             if (status) console.log(status);
           });
-          socket.on("preprocess_error", (errorMessage: string) => setPreprocess_error({ open: true, message: errorMessage }))
+          socket.on("preprocess_error", (errorMessage: string) => setPreprocessError({ open: true, message: errorMessage }))
           socket.on("users", (ids: string[]) => {
             const nodes = initializeNodes(ids);
             setNodes(nodes);
@@ -59,7 +62,7 @@ const InfluenceGraph = () => {
                 [heuristicName]: heuristicLinks
               }));
               console.log({ heuristicName, heuristicLinks })
-
+              if (heuristicName === "affinities_links") setAffinityProgress(prev => { return { ...prev, open: false } })
               setLinks(prev => {
                 if (!prev.length) {
                   const { links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks, setNodes)
@@ -74,8 +77,18 @@ const InfluenceGraph = () => {
               })
             });
           })
-          socket.on("stance_heuristic", stances => { processStance(stances, setNodes); console.log(stances) }
-          )
+          socket.on("stance_time", (stanceTime) => { setStanceProgress({ users: stanceTime.n_users, progress: stanceTime.null_stances, processing: stanceTime.null_stances, estimatedTime: stanceTime.estimated_time, batches: stanceTime.n_batch, open: true }); console.log({ stance_time: stanceTime }) })
+          socket.on("stance_heuristic", stances => {
+            processStance(stances, setNodes); setStanceProgress(prev => {
+              return {
+                ...prev, open: false
+              }
+            });
+            console.log(stances)
+          })
+          socket.on("affinity_work_info", affinityUsers => setAffinityProgress(prev => { return { ...prev, users: affinityUsers, open: true } }))
+          socket.on("affinity_work", affinityProgress => setAffinityProgress(prev => { return { ...prev, progress: affinityProgress } }))
+
         }
       };
       reader.readAsDataURL(file);
@@ -137,16 +150,12 @@ const InfluenceGraph = () => {
     const noDigraph: HeuristicKey[] = ['agreement_links']
     setDigraph(!noDigraph.includes(heuristicName))
     const { links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName], setNodes)
-    console.log(maxOutDegree, maxInfluence)
     setLinks(links);
     setMaxOutDegree(maxOutDegree);
     setMaxInfluence(maxInfluence);
     cosmographRef.current?.fitView();
     cosmographRef.current?.setZoomLevel(0.2, 3000)
     setHeuristic(event.target.value);
-
-    //setShowLabelsFor(undefined);
-    //setSelectedNode(undefined);
   }
   useEffect(() => {
     if (selectedNode) {
@@ -164,7 +173,7 @@ const InfluenceGraph = () => {
       return;
     }
 
-    setPreprocess_error({ open: false, message: "" });
+    setPreprocessError({ open: false, message: "" });
   };
 
   return (
@@ -201,14 +210,14 @@ const InfluenceGraph = () => {
         <Box sx={{ position: "relative" }}>
 
           <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} />
-          <Snackbar open={preprocess_error.open} autoHideDuration={30000} onClose={handleClose}>
+          <Snackbar open={preprocessError.open} autoHideDuration={30000} onClose={handleClose}>
             <Alert
               onClose={handleClose}
               severity="error"
               variant="filled"
               sx={{ width: '100%' }}
             >
-              {preprocess_error.message}
+              {preprocessError.message}
             </Alert>
           </Snackbar>
           <Cosmograph
@@ -232,7 +241,7 @@ const InfluenceGraph = () => {
 
             simulationGravity={0.5}
             simulationRepulsion={200}//
-            simulationRepulsionTheta={1}//1
+            simulationRepulsionTheta={2}//1
             simulationLinkSpring={1}//1
             simulationLinkDistance={50}
             simulationFriction={0.5}
@@ -250,7 +259,7 @@ const InfluenceGraph = () => {
       {selectedNode && <SelectedUserInfo selectedNode={selectedNode} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`}
         links={links} getLinkColor={getLinkColor} showLinkNodes={showLinkNodes} digraph={digraph} />
       }
-
+      {<StanceFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} />}
     </Box>
   );
 };

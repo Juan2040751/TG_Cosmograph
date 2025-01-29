@@ -14,7 +14,7 @@ function CircularProgressWithLabel(
 ) {
     return (
         <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress variant="determinate" value={props.value} sx={{ color: props.backColor }} />
+            <CircularProgress variant="determinate" value={Number(props.value?.toFixed(1))} sx={{ color: props.backColor }} />
             <Box
                 sx={{
                     top: 0,
@@ -102,15 +102,15 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes, digra
                         <CardHeader
                             sx={{ padding: "4px" }}
                             avatar={
-                                <CircularProgressWithLabel value={selectedNode.belief ? (selectedNode.belief * 100).toFixed(1) : 0} backColor={nodeColor}>
+                                <CircularProgressWithLabel value={selectedNode.belief ? selectedNode.belief * 100 : 0} backColor={nodeColor}>
                                     <Typography
                                         variant="caption"
                                         component="div"
                                         sx={{ color: 'text.secondary' }}
-                                    >{`${selectedNode.belief ||  selectedNode.belief== 0? (selectedNode.belief * 100).toFixed(1) : ''}%`}</Typography></CircularProgressWithLabel>
+                                    >{`${selectedNode.belief || selectedNode.belief == 0 ? (selectedNode.belief * 100).toFixed(1) : ''}%`}</Typography></CircularProgressWithLabel>
                             }
                             title={`@${selectedNode?.id}`}
-                            subheader={`${selectedNode?.outDegree} nodos influenciados\n${selectedNode.belief || selectedNode.belief == 0? (selectedNode.belief * 100).toFixed(1)+ "% de acuerdo": 'Creencia Indeterminado'}`}
+                            subheader={`${selectedNode?.outDegree} nodos influenciados\n${selectedNode.belief || selectedNode.belief == 0 ? (selectedNode.belief * 100).toFixed(1) + "% de acuerdo" : 'Creencia Indeterminado'}`}
                         />
                         <ExpandMore
                             expand={expanded}
