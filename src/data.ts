@@ -5,6 +5,7 @@ export type Node = {
     x?: number;
     y?: number;
     belief?: number;
+    confidence?: number;
 };
 export type Link = {
     source: string;
@@ -20,9 +21,10 @@ export const initializeNodes = (ids: string[]): Node[] => {
     return ids.map(id => ({
         id,
         outDegree: 0,
-        x: undefined,   // Opcional, puedes omitir estos si no los necesitas
+        x: undefined,  
         y: undefined,
-        belief: undefined
+        belief: undefined,
+        confidence: undefined,
     }));
 }
 
@@ -45,8 +47,8 @@ export const processEdges = (
         if (!tempNodeData.has(source)) {
             tempNodeData.set(source, {
                 outDegree: 1,
-                x: Math.random() * 4096,
-                y: Math.random() * 4096
+                x: Math.random() * 8192,
+                y: Math.random() * 8192
             });
         } else {
             const existingData = tempNodeData.get(source);
@@ -59,8 +61,8 @@ export const processEdges = (
         if (!tempNodeData.has(target)) {
             tempNodeData.set(target, {
                 outDegree: 0,
-                x: Math.random() * 4096,
-                y: Math.random() * 4096
+                x: Math.random() * 8192,
+                y: Math.random() * 8192
             });
         }
 
@@ -99,6 +101,14 @@ export const processStance = (stances: { [key: string]: number }, setNodes: Reac
     setNodes((prevNodes) =>
         prevNodes.map((node) => {
             node["belief"] = stances[node.id]
+            return node
+        })
+    );
+}
+export const processConfidence= (confidences: { [key: string]: number }, setNodes: React.Dispatch<React.SetStateAction<Node[]>>) => {
+    setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+            node["confidence"] = confidences[node.id]
             return node
         })
     );

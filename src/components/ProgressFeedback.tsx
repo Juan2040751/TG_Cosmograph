@@ -1,7 +1,7 @@
 import { Box, LinearProgress, Snackbar, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-function StanceFeedback({ stanceProgress, setStanceProgress, affinityProgress }: {
+function ProgressFeedback({ stanceProgress, setStanceProgress, affinityProgress }: {
     stanceProgress: { users: number, progress: number, processing: number, open: boolean, estimatedTime: number, batches: number },
     setStanceProgress: React.Dispatch<React.SetStateAction<{
         users: number, progress: number, processing: number, open: boolean, estimatedTime: number, batches: number
@@ -26,15 +26,14 @@ function StanceFeedback({ stanceProgress, setStanceProgress, affinityProgress }:
             });
 
         }, 1000);
-
         return () => clearInterval(interval);
     }, [stanceProgress.users, stanceProgress.estimatedTime, setStanceProgress]);
 
     return (
-        <Box sx={{ transform: "translate(0, -80px)" }}>
+        <Box sx={{ transform: "translate(0, -80px)"}}>
             <Snackbar
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                sx={{ backgroundColor: "white", borderRadius: "5px" }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                sx={{ backgroundColor: "white", borderRadius: "5px",marginRight: "-14px !important"  }}
                 open={affinityProgress.open || stanceProgress.open}>
                 <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', width: "100%", marginInline: "4px" }}>
                     <Box sx={{ display: 'flex', justifyContent: 'center', width: "100%" }}>
@@ -71,4 +70,4 @@ function StanceFeedback({ stanceProgress, setStanceProgress, affinityProgress }:
     );
 }
 
-export default StanceFeedback;
+export default ProgressFeedback;

@@ -7,7 +7,7 @@ body {
 .wrapper {
   display: flex;
   flex-flow: column;
-  background: var(--cosmograph-search-input-background);
+  
 }
 
 .cosmographStyle {
@@ -24,23 +24,26 @@ body {
   width: 100%;
   margin-inline: 10px;
 }
+.smui-text-field--standard .mdc-text-field__icon--leading {
+margin-left: 8px;
+}
 
 .sidebarStyle {
-  position: absolute;
-  bottom: 70px;
-  width: 350px;
-  display: flex;
-  flex-flow: column;
-  margin: 5px;
+
 }
 
 
 
 .infoStyle {
-  margin: 8px;
+  margin: 10px;
+  margin-bottom: 30px;
   color: white;
   font-size: 14px;
   white-space: pre-line;
+  position: absolute;
+  bottom: 70px;
+  display: flex;
+  flex-flow: column;
 }
 
 .MuiCardHeader-subheader{

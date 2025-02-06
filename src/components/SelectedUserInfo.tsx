@@ -95,35 +95,83 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes, digra
         setExpanded(!expanded);
     };
     return (
-        <div className="sidebarStyle">
-            <div className="infoStyle">
-                <Card >
-                    <CardContent sx={{ padding: "8px !important", display: "flex" }}>
-                        <CardHeader
-                            sx={{ padding: "4px" }}
-                            avatar={
-                                <CircularProgressWithLabel value={selectedNode.belief ? selectedNode.belief * 100 : 0} backColor={nodeColor}>
-                                    <Typography
-                                        variant="caption"
-                                        component="div"
-                                        sx={{ color: 'text.secondary' }}
-                                    >{`${selectedNode.belief || selectedNode.belief == 0 ? (selectedNode.belief * 100).toFixed(1) : ''}%`}</Typography></CircularProgressWithLabel>
-                            }
-                            title={`@${selectedNode?.id}`}
-                            subheader={`${selectedNode?.outDegree} nodos influenciados\n${selectedNode.belief || selectedNode.belief == 0 ? (selectedNode.belief * 100).toFixed(1) + "% de acuerdo" : 'Creencia Indeterminado'}`}
-                        />
+        <div className="infoStyle">
+                <Card sx={{ width: "100%", gap: 1, overflow: "clip" }}>
+                    <CardContent
+                        sx={{
+                            padding: "8px !important",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between"
+                        }}
+                    >
+                        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, minWidth: 0 }}>
+                            <CardHeader
+                                sx={{
+                                    padding: "4px",
+                                    flexGrow: 1,
+                                    minWidth: 0
+                                }}
+                                avatar={
+                                    <CircularProgressWithLabel
+                                        value={selectedNode.belief ? selectedNode.belief * 100 : 0}
+                                        backColor={nodeColor}
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            component="div"
+                                            sx={{ color: 'text.secondary' }}
+                                        >
+                                            {`${selectedNode.belief || selectedNode.belief === 0
+                                                ? (selectedNode.belief * 100).toFixed(1)
+                                                : ''}%`}
+                                        </Typography>
+                                    </CircularProgressWithLabel>
+                                }
+                                title={`@${selectedNode?.id}`}
+                                component='div'
+                                subheader={
+                                    <Box>
+                                        <Typography variant="body2" sx={{ color: 'GrayText' }}>
+                                            {selectedNode?.outDegree} nodos influenciados
+                                        </Typography>
+                                        <Box display="flex" gap={1}>
+                                            <Typography variant="body2" noWrap  sx={{ color: 'GrayText' }}>
+                                                {selectedNode.belief || selectedNode.belief === 0
+                                                    ? `${(selectedNode.belief * 100).toFixed(1)}% de acuerdo`
+                                                    : 'Creencia Indeterminado'}
+                                            </Typography>
+                                            <Typography variant="body2" noWrap sx={{ color: 'GrayText' }}>
+                                                {selectedNode.confidence || selectedNode.confidence === 0
+                                                    ? `${(selectedNode.confidence * 100).toFixed(1)}% en confianza`
+                                                    : 'Confianza Indeterminado'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                }
+                            />
+                        </Box>
+
                         <ExpandMore
                             expand={expanded}
                             onClick={handleExpandClick}
                             aria-expanded={expanded}
                             aria-label="show more"
+                            sx={{ marginLeft: "auto" }}  
                         >
                             <ExpandMoreIcon />
                         </ExpandMore>
                     </CardContent>
-                    <Collapse in={expanded} timeout="auto" unmountOnExit sx={{ width: '100%', height: 400, maxWidth: 360, bgcolor: 'background.paper' }}>
+
+     
+                    <Collapse
+                        in={expanded}
+                        timeout="auto"
+                        unmountOnExit
+                        sx={{ width: '100%', bgcolor: 'background.paper' }}
+                    >
                         <FixedSizeList
-                            height={400}
+                            height={550}
                             width={360}
                             itemSize={46}
                             itemCount={selectedNode?.outDegree}
@@ -135,9 +183,8 @@ const SelectedUserInfo = ({ selectedNode, nodeColor, links, showLinkNodes, digra
                     </Collapse>
                 </Card>
 
-            </div>
 
-        </div>
+            </div>
     )
 }
 
