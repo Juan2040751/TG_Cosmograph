@@ -7,12 +7,11 @@ body {
 .wrapper {
   display: flex;
   flex-flow: column;
-  
 }
 
 .cosmographStyle {
   display: flex;
-  height: calc(100dvh - 168px) !important;
+  height: calc(100dvh - 68px) !important;
 }
 
 
@@ -28,20 +27,15 @@ body {
 margin-left: 8px;
 }
 
-.sidebarStyle {
-
-}
-
 
 
 .infoStyle {
   margin: 10px;
-  margin-bottom: 30px;
   color: white;
   font-size: 14px;
   white-space: pre-line;
   position: absolute;
-  bottom: 70px;
+  bottom: 10px;
   display: flex;
   flex-flow: column;
 }

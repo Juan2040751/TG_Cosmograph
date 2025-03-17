@@ -30,7 +30,7 @@ function ProgressFeedback({ stanceProgress, setStanceProgress, affinityProgress 
     }, [stanceProgress.users, stanceProgress.estimatedTime, setStanceProgress]);
 
     return (
-        <Box sx={{ transform: "translate(0, -80px)"}}>
+        <Box>
             <Snackbar
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 sx={{ backgroundColor: "white", borderRadius: "5px",marginRight: "-14px !important"  }}

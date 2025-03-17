@@ -18,21 +18,21 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
     progress: number;
     open: boolean;
 }>>, setMaxOutDegree: Dispatch<SetStateAction<number>>,
-    setMaxInfluence: Dispatch<SetStateAction<number>>,
+    setMaxInfluence: Dispatch<SetStateAction<{ [key: string]: number}>>,
     setHeuristic: Dispatch<SetStateAction<string>>,
     setNodes: Dispatch<SetStateAction<Node[]>>,
-    cosmographRef: RefObject<CosmographRef<Node, Link>>) => {
-    socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number }> }) => {
+    cosmographRef: RefObject<CosmographRef<Node, Link>>, 
+    setLinksNames: Dispatch<SetStateAction<{ [key: string]: {cant: number, active: boolean} }>>) => {
+    socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number, date?:string[], link_name: string }> }) => {
         Object.entries(heuristic).forEach(([heuristicName, heuristicLinks]) => {
             setHeuristicsLinks(prev => ({
                 ...prev,
                 [heuristicName]: heuristicLinks
             }));
-            console.log({ heuristicName, heuristicLinks })
             if (heuristicName === "affinities_links") setAffinityProgress(prev => { return { ...prev, open: false } })
             setLinks(prev => {
                 if (!prev.length) {
-                    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks, setNodes)
+                    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks, setNodes, setLinksNames)
                     setMaxOutDegree(maxOutDegree);
                     setMaxInfluence(maxInfluence);
                     cosmographRef.current?.fitView();

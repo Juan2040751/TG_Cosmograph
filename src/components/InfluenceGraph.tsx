@@ -1,21 +1,23 @@
 import { Cosmograph, CosmographInputConfig, CosmographProvider, CosmographRef, CosmographSearchInputConfig, CosmographSearchRef } from '@cosmograph/react';
 import { Alert, Box, SelectChangeEvent, Snackbar, SnackbarCloseReason } from '@mui/material';
 import { SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { HeuristicKey, Link, Node, heuristicLabel, initializeNodes, processConfidence, processEdges, processStance } from '../data';
+import { HeuristicKey, Link, Node, getHueIndexColor, heuristicLabel, initializeNodes, processConfidence, processEdges, processStance } from '../data';
 import { receiveInfluenceHeuristic, sendCSV, socket } from '../socket';
 import HeuristicInfo from './HeuristicInfo';
-import SelectedUserInfo from './SelectedUserInfo';
 import ProgressFeedback from './ProgressFeedback';
+import SelectedUserInfo from './SelectedUserInfo';
 import "./styles.css";
-import Timeline from './Timeline';
+//import Timeline from './Timeline';
 import TopBar from './TopBar';
 
 const InfluenceGraph = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
+  const [filteredlinks, setFilteredLinks] = useState<Link[]>([]);
   const [maxOutDegree, setMaxOutDegree] = useState<number>(1);
-  const [maxInfluence, setMaxInfluence] = useState<number>(0);
+  const [maxInfluence, setMaxInfluence] = useState<{ [key: string]: number }>({});
   const [digraph, setDigraph] = useState<boolean>(true);
+  const [linksNames, setLinksNames] = useState<{ [key: string]: {active: boolean, cant: number} }>({});
   const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[], affinities_links: Link[], agreement_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [], affinities_links: [], agreement_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
   const [preprocessError, setPreprocessError] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
@@ -27,7 +29,7 @@ const InfluenceGraph = () => {
   const [showLabelsFor, setShowLabelsFor] = useState<Node[] | undefined>(
     undefined
   );
-  const [baseHueColor, setBaseHueColor] = useState<number>(Math.floor(Math.random() * 254 + 1));
+  const [baseHueColor, _] = useState<number>(Math.floor(Math.random() * 358 + 1));
 
   // Event handler for uploading CSV file
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +46,7 @@ const InfluenceGraph = () => {
             const nodes = initializeNodes(ids);
             setNodes(nodes);
           });
-          receiveInfluenceHeuristic(setHeuristicsLinks, setLinks, setAffinityProgress, setMaxOutDegree, setMaxInfluence, setHeuristic, setNodes, cosmographRef)
+          receiveInfluenceHeuristic(setHeuristicsLinks, setLinks, setAffinityProgress, setMaxOutDegree, setMaxInfluence, setHeuristic, setNodes, cosmographRef, setLinksNames)
           socket.on("stance_time", (stanceTime) => {
             setStanceProgress({
               users: stanceTime.n_users, progress: stanceTime.null_stances, processing: stanceTime.null_stances,
@@ -71,19 +73,33 @@ const InfluenceGraph = () => {
     return `hsl(${baseHueColor}, ${saturation}%, ${newLightness}%)`;
   };
 
+  const getNode = (id: string)=>{
+    return nodes.find(node => node.id === id)
+  }
+
   const getLinkColor = (link: Link) => {
-    const hue = digraph ? baseHueColor : link?.influenceValue < 0 ? 0 : 100
-    const saturation = Math.round(Math.abs(link?.influenceValue) / maxInfluence * 100);
-    const newLightness = 100 - saturation / 2;
-    return `hsl(${hue}, ${saturation}%, ${newLightness}%)`;
+    const linkKeys = Object.keys(linksNames);
+    const keyIndex = linkKeys.indexOf(link.link_name);
+
+    const hue = digraph ? getHueIndexColor(keyIndex, baseHueColor): link?.influenceValue < 0 ? 0 : 100;
+    const saturation = Math.round(Math.abs(link?.influenceValue) / maxInfluence[link.link_name] * 100);
+    const lightness = 100 - saturation / 2;
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   };
+
+  const getLinkNameColor = (name: string) => {
+    const linkKeys = Object.keys(linksNames);
+    const keyIndex = linkKeys.indexOf(name);
+    const hue = getHueIndexColor(keyIndex, baseHueColor);
+    return hue
+  }
 
   const onCosmographClick = useCallback<
     Exclude<CosmographInputConfig<Node, Link>["onClick"], undefined>
   >((n) => {
     search?.current?.clearInput();
     if (n) {
-      cosmographRef.current?.zoomToNode(n)
+      //cosmographRef.current?.zoomToNode(n)
       cosmographRef.current?.selectNode(n);
       setShowLabelsFor([n]);
       setSelectedNode(n);
@@ -116,7 +132,7 @@ const InfluenceGraph = () => {
     const heuristicName: HeuristicKey = (event.target.value) as HeuristicKey
     const noDigraph: HeuristicKey[] = ['agreement_links']
     setDigraph(!noDigraph.includes(heuristicName))
-    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName], setNodes)
+    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicsLinks[heuristicName], setNodes, setLinksNames)
     setLinks(links);
     setMaxOutDegree(maxOutDegree);
     setMaxInfluence(maxInfluence);
@@ -134,8 +150,16 @@ const InfluenceGraph = () => {
     }
   }, [nodes])
 
+  useEffect(() => {
+    setFilteredLinks(links)
+  }, [links])
+
+  const filterLinks= (activeLinksNames: string[]) =>{
+    setFilteredLinks(links.filter(link => activeLinksNames.includes(link.link_name)))
+  }
+
   const handleClose = (
-    event?: SyntheticEvent | Event,
+    _event?: SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
   ) => {
     if (reason === 'clickaway') {
@@ -148,11 +172,11 @@ const InfluenceGraph = () => {
     <Box sx={{ height: "100px !important" }}>
       <CosmographProvider
         nodes={nodes}
-        links={links}
+        links={filteredlinks}
       >
-        <TopBar handleFileUpload={handleFileUpload} search={search} handleChangeHeuristic={handleChangeHeuristic} onSearchSelectResult={onSearchSelectResult} heuristic={heuristic} heuristicsLinks={heuristicsLinks} />
+        <TopBar handleFileUpload={handleFileUpload} search={search} handleChangeHeuristic={handleChangeHeuristic} onSearchSelectResult={onSearchSelectResult} heuristic={heuristic} heuristicsLinks={heuristicsLinks} links={links} nodes={nodes} />
         <Box sx={{ position: "relative" }}>
-          <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`} />
+          <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor}  linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks}/>
           <Snackbar open={preprocessError.open} autoHideDuration={30000} onClose={handleClose}>
             <Alert
               onClose={handleClose}
@@ -178,8 +202,9 @@ const InfluenceGraph = () => {
             linkWidthScale={1}
             linkArrowsSizeScale={1}
             linkArrows={digraph}
-            linkWidth={(link: Link) => Math.abs(link.influenceValue) || 0.1}
+            linkWidth={(link: Link) => Math.abs(link.influenceValue)?? 0.1}
             linkColor={getLinkColor}
+            
             simulationGravity={0.5}
             simulationRepulsion={200}//
             simulationRepulsionTheta={2}//1
@@ -192,12 +217,12 @@ const InfluenceGraph = () => {
             showHoveredNodeLabel
             showTopLabelsValueKey={'outDegree'}
           />
-          <Timeline baseHueColor={baseHueColor} />
+          {/**<Timeline baseHueColor={baseHueColor} />*/}
         </Box>
 
       </CosmographProvider>
-      {selectedNode && <SelectedUserInfo selectedNode={selectedNode} nodeColor={`hsl(${baseHueColor}, 100%, 50%)`}
-        links={links} getLinkColor={getLinkColor} showLinkNodes={showLinkNodes} digraph={digraph} />
+      {selectedNode && <SelectedUserInfo selectedNode={selectedNode} getNode={getNode}
+        links={links}  showLinkNodes={showLinkNodes} digraph={digraph} getLinkNameColor={getLinkNameColor}  />
       }
       {<ProgressFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} />}
     </Box>
