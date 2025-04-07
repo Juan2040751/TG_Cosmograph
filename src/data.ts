@@ -129,7 +129,7 @@ export const processConfidence = (confidences: { [key: string]: number }, setNod
 }
 
 export const getHueIndexColor = (index: number, baseHueColor: number) => {
-    const hueOffsets = [baseHueColor, 120, 240];
-    const hue = hueOffsets[index];
+    const hueOffsets = [0, 120, 240];
+    const hue = baseHueColor + hueOffsets[index];
     return hue;
 }

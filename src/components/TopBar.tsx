@@ -4,10 +4,11 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Box, Button, FormControl, IconButton, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { saveAs } from "file-saver";
-import JSZip from "jszip";
-import { RefObject } from 'react';
+import JSZip, { file } from "jszip";
+import { RefObject, useState } from 'react';
 import { HeuristicKey, heuristicLabel, Link, Node } from '../data';
 import "./styles.css";
+import BeliefDialog from './BeliefDialog';
 
 /**
  * Converts an array of objects to CSV format.
@@ -47,14 +48,23 @@ async function downloadGraph(nodes: Node[], links: Link[], heuristic: string) {
 
 
 function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelectResult, heuristic, heuristicsLinks, links, nodes }: {
-    handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void, search: RefObject<CosmographSearchRef<Node, Link>>, handleChangeHeuristic: (event: SelectChangeEvent) => void, onSearchSelectResult: (node?: Node | undefined) => void, heuristic: string, heuristicsLinks: {
+    handleFileUpload: (file: File,
+        topicInfo: { topic: string, topicContext: string }) => void,
+    search: RefObject<CosmographSearchRef<Node, Link>>,
+    handleChangeHeuristic: (event: SelectChangeEvent) => void,
+    onSearchSelectResult: (node?: Node | undefined) => void,
+    heuristic: string, heuristicsLinks: {
         mentions_links: Link[];
         global_influence_links: Link[];
         local_influence_links: Link[];
         affinities_links: Link[];
         agreement_links: Link[];
-    }, links: Link[], nodes: Node[]
+    },
+    links: Link[],
+    nodes: Node[]
 }) {
+    const [openBeliefDialog, setOpenBeliefDialog] = useState(false);
+    const [CSVFile, setCSVFile] = useState<File>();
     const VisuallyHiddenInput = styled('input')({
         clip: 'rect(0 0 0 0)',
         clipPath: 'inset(50%)',
@@ -64,6 +74,15 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
         whiteSpace: 'nowrap',
         width: 1,
     });
+
+    const openFileDialog = (event: React.ChangeEvent<HTMLInputElement>) => {
+        event.preventDefault()
+        setOpenBeliefDialog(true);
+        setCSVFile(event.target.files?.[0])
+    }
+    const sendDataset = (topicInfo: { topic: string, topicContext: string }) => {
+        if (CSVFile) handleFileUpload(CSVFile, topicInfo)
+    }
 
     return (
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 16px", gap: "10px" }}>
@@ -79,7 +98,7 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
                 Cargar DataSet
                 <VisuallyHiddenInput
                     type="file"
-                    onChange={handleFileUpload}
+                    onChange={openFileDialog}
                     multiple
                     accept=".csv"
                 />
@@ -109,6 +128,7 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
             <IconButton disabled={!(nodes?.length && links?.length)} color="primary" aria-label="Descargar Red" onClick={() => downloadGraph(nodes, links, heuristicLabel[heuristic as HeuristicKey])}>
                 <CloudDownloadIcon />
             </IconButton>
+            <BeliefDialog openBeliefDialog={openBeliefDialog} setOpenBeliefDialog={setOpenBeliefDialog} sendDataset={sendDataset} />
         </Box>
     )
 }

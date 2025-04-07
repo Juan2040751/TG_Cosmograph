@@ -45,7 +45,7 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
         });
     })
 }
-export const sendCSV = (csvBase64: string) => {
-    socket.emit('influenceGraph', { csv_data: csvBase64 });
+export const sendCSV = (csvBase64: string, topicInfo: { topic: string, topicContext: string }) => {
+    socket.emit('influenceGraph', { csv_data: csvBase64, topic_info: {topic: topicInfo.topic, topic_context: topicInfo.topicContext} });
 }
 
