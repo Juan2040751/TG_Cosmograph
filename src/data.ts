@@ -16,9 +16,9 @@ export type Link = {
     date?: string[];
     link_name: string;
 };
-export const heuristicLabel: { mentions_links: string, global_influence_links: string, local_influence_links: string, affinities_links: string, agreement_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", local_influence_links: "Popularidad Relativa", affinities_links: "Afinidad", agreement_links: "Acuerdo/Desacuerdo" };
+export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string, agreement_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad", agreement_links: "Acuerdo/Desacuerdo" };
 
-export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'local_influence_links' | 'affinities_links' | 'agreement_links';
+export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'affinities_links' | 'agreement_links';
 
 export const initializeNodes = (ids: string[]): Node[] => {
     return ids.map(id => ({

@@ -23,16 +23,12 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
             description: "Red de menciones basada en popularidad",
             influenceRelation: "Un nodo con mayor popularidad, medida por sus interacciones, tiene más influencia en los usuarios que interactúan con él",
         },
-        "Popularidad Relativa": {
-            description: "Red de popularidad relativa",
-            influenceRelation: "Considera la popularidad de cada usuario en relación a los nodos a los que está conectado directamente"
-        },
         "Afinidad": {
             description: "Red de similitud de opiniones",
             influenceRelation: "La influencia entre usuarios se basa en la similitud de sus opiniones frente al tema, considerando su sintaxis y semántica"
         }
     }
-    const heuristicDetails = heuristicLabel ? heuristicsDescriptions[heuristicLabel as ("Interacciones" | "Popularidad" | "Popularidad Relativa" | "Afinidad")] : undefined
+    const heuristicDetails = heuristicLabel ? heuristicsDescriptions[heuristicLabel as ("Interacciones" | "Popularidad" | "Afinidad")] : undefined
     const nodeColor = `hsl(${baseHueColor}, 100%, 50%)`
     return (
         heuristicDetails && <Accordion defaultExpanded
@@ -75,11 +71,10 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                                         onChange={({ target }) => {
                                             setLinksNames(prev => {
                                                 prev[linkName].active = target.checked
-                                                console.log(prev)
+       
                                                 const activeLinksNames: string[] = Object.entries(prev)
                                                     .filter(([_, value]) => value.active)
                                                     .map(([key]) => key)
-                                                console.log(activeLinksNames)
                                                 filterLinks(activeLinksNames)
                                                 return prev
                                             })

@@ -10,7 +10,6 @@ export const socket = io("http://localhost:5000", {
 export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateAction<{
     mentions_links: Link[];
     global_influence_links: Link[];
-    local_influence_links: Link[];
     affinities_links: Link[];
     agreement_links: Link[];
 }>>, setLinks: Dispatch<SetStateAction<Link[]>>, setAffinityProgress: Dispatch<SetStateAction<{

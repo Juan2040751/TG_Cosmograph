@@ -18,7 +18,7 @@ const InfluenceGraph = () => {
   const [maxInfluence, setMaxInfluence] = useState<{ [key: string]: number }>({});
   const [digraph, setDigraph] = useState<boolean>(true);
   const [linksNames, setLinksNames] = useState<{ [key: string]: { active: boolean, cant: number } }>({});
-  const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[], local_influence_links: Link[], affinities_links: Link[], agreement_links: Link[] }>({ mentions_links: [], global_influence_links: [], local_influence_links: [], affinities_links: [], agreement_links: [] })
+  const [heuristicsLinks, setHeuristicsLinks] = useState<{ mentions_links: Link[], global_influence_links: Link[],  affinities_links: Link[], agreement_links: Link[] }>({ mentions_links: [], global_influence_links: [], affinities_links: [], agreement_links: [] })
   const [heuristic, setHeuristic] = useState<string>('');
   const [preprocessError, setPreprocessError] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
   const [stanceProgress, setStanceProgress] = useState<{ users: number, progress: number, processing: number, open: boolean, estimatedTime: number, batches: number }>({ users: 0, progress: 0, processing: 0, open: false, estimatedTime: 60, batches: 0 });

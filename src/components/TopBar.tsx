@@ -56,7 +56,6 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
     heuristic: string, heuristicsLinks: {
         mentions_links: Link[];
         global_influence_links: Link[];
-        local_influence_links: Link[];
         affinities_links: Link[];
         agreement_links: Link[];
     },
