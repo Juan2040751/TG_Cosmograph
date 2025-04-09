@@ -82,7 +82,7 @@ const nodeInfo = (props: ListChildComponentProps) => {
 const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLinkNameColor, getNode }: { selectedNode: Node, links: Link[], showLinkNodes: (link: Link) => void, digraph: boolean, getLinkNameColor: (name: string) => number, getNode: (id: string) => Node | undefined }) => {
     const [expanded, setExpanded] = useState(false);
     let nodeLinks: Link[] = links
-        .filter(link => link.source === selectedNode?.id)
+        .filter(link => link.source === selectedNode?.id || (link.link_name === "Acuerdo/Desacuerdo" && link.target === selectedNode?.id) )
         .sort((a, b) => a.target.localeCompare(b.target))
         ;
     let influencedNodes = nodeLinks.reduce((acc, link) => {
@@ -152,7 +152,7 @@ const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLink
                             subheader={
                                 <Box>
                                     <Typography variant="body2" sx={{ color: 'GrayText' }}>
-                                        {selectedNode?.outDegree} nodos influenciados
+                                        {nodeInfluenced.length} nodos influenciados
                                     </Typography>
                                     <Box display="flex" gap={1}>
                                         <Typography variant="body2" noWrap sx={{ color: 'GrayText' }}>

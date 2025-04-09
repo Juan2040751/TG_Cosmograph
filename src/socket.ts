@@ -11,13 +11,11 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
     mentions_links: Link[];
     global_influence_links: Link[];
     affinities_links: Link[];
-    agreement_links: Link[];
 }>>, setLinks: Dispatch<SetStateAction<Link[]>>, setAffinityProgress: Dispatch<SetStateAction<{
     users: number;
     progress: number;
     open: boolean;
 }>>, setMaxOutDegree: Dispatch<SetStateAction<number>>,
-    setMaxInfluence: Dispatch<SetStateAction<{ [key: string]: number}>>,
     setHeuristic: Dispatch<SetStateAction<string>>,
     setNodes: Dispatch<SetStateAction<Node[]>>,
     cosmographRef: RefObject<CosmographRef<Node, Link>>, 
@@ -31,9 +29,8 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
             if (heuristicName === "affinities_links") setAffinityProgress(prev => { return { ...prev, open: false } })
             setLinks(prev => {
                 if (!prev.length) {
-                    const { links, maxOutDegree, maxInfluence } = processEdges(heuristicLinks, setNodes, setLinksNames)
+                    const { links, maxOutDegree } = processEdges(heuristicLinks, setNodes, setLinksNames)
                     setMaxOutDegree(maxOutDegree);
-                    setMaxInfluence(maxInfluence);
                     cosmographRef.current?.fitView();
                     cosmographRef.current?.setZoomLevel(0.2, 3000)
                     setHeuristic(heuristicName);

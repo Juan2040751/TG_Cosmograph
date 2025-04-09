@@ -18,8 +18,29 @@ import BeliefDialog from './BeliefDialog';
 function convertToCSV<T extends object>(data: T[]): string {
     if (!data.length) return "";
 
-    const headers = Object.keys(data[0]).join(",") + "\n";
-    const csvContent = data.map(item =>
+    let extendedData: T[] = [...data];
+
+    const isEdgeData = "link_name" in data[0];
+
+    if (isEdgeData) {
+        const duplicatedEdges: T[] = [];
+
+        data.forEach(item => {
+            const link = item as any;
+            if (link.link_name === "Acuerdo/Desacuerdo") {
+                duplicatedEdges.push({
+                    ...link,
+                    source: link.target,
+                    target: link.source
+                });
+            }
+        });
+
+        extendedData = [...data, ...duplicatedEdges];
+    }
+
+    const headers = Object.keys(extendedData[0]).join(",") + "\n";
+    const csvContent = extendedData.map(item =>
         Object.values(item).map(value =>
             Array.isArray(value) ? `"${value.join(";")}"` : value
         ).join(",")
@@ -57,7 +78,6 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
         mentions_links: Link[];
         global_influence_links: Link[];
         affinities_links: Link[];
-        agreement_links: Link[];
     },
     links: Link[],
     nodes: Node[]

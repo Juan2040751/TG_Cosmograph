@@ -16,9 +16,9 @@ export type Link = {
     date?: string[];
     link_name: string;
 };
-export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string, agreement_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad", agreement_links: "Acuerdo/Desacuerdo" };
+export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string} = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad"};
 
-export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'affinities_links' | 'agreement_links';
+export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'affinities_links';
 
 export const initializeNodes = (ids: string[]): Node[] => {
     return ids.map(id => ({
@@ -34,19 +34,17 @@ export const initializeNodes = (ids: string[]): Node[] => {
 export const processEdges = (
     data: Array<{ source: string; target: string; influenceValue: number, date?: string[] | undefined, link_name: string }>,
     setNodes: Dispatch<SetStateAction<Node[]>>, setLinksNames: Dispatch<SetStateAction<{ [key: string]: {cant: number, active: boolean} }>>
-): { links: Link[], maxOutDegree: number, maxInfluence: {[key: string]: number} } => {
+): { links: Link[], maxOutDegree: number} => {
 
     const links: Link[] = [];
     let maxOutDegree = 0;
-    let maxInfluence:{[key: string]: number} = {};
+
 
 
     const tempNodeData = new Map<string, { outDegree: number, x: number, y: number }>();
 
     data.forEach((row) => {
         const { source, target, influenceValue, date, link_name } = row;
-        if (!maxInfluence[link_name]) maxInfluence[link_name] = 0
-        if (influenceValue > maxInfluence[link_name]) maxInfluence[link_name] = influenceValue;
         if (!tempNodeData.has(source)) {
             tempNodeData.set(source, {
                 outDegree: 1,
@@ -108,7 +106,7 @@ export const processEdges = (
     }, {} as { [key: string]: {cant: number, active: boolean} });
     
     setLinksNames(linksNames)
-    return { links, maxOutDegree, maxInfluence };
+    return { links, maxOutDegree };
 };
 
 export const processStance = (stances: { [key: string]: number }, setNodes: React.Dispatch<React.SetStateAction<Node[]>>) => {
@@ -132,4 +130,28 @@ export const getHueIndexColor = (index: number, baseHueColor: number) => {
     const hueOffsets = [0, 120, 240];
     const hue = baseHueColor + hueOffsets[index];
     return hue;
+}
+
+export const updateOutDegrees = (nodes: Node[], links: Link[])=> {
+  const updatedMap = new Map<string, Node>();
+  nodes.forEach(node => {
+    updatedMap.set(node.id, { ...node, outDegree: 0 });
+  });
+
+  links.forEach(link => {
+    const sourceNode = updatedMap.get(link.source);
+    if (sourceNode) {
+      sourceNode.outDegree += 1;
+    }
+  });
+
+
+  const updatedNodes = Array.from(updatedMap.values());
+
+  const maxOutDegree = updatedNodes.reduce(
+    (max, node) => Math.max(max, node.outDegree),
+    0
+  );
+
+  return { updatedNodes, maxOutDegree };
 }
