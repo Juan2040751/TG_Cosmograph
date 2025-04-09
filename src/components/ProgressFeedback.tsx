@@ -32,7 +32,7 @@ function ProgressFeedback({ stanceProgress, setStanceProgress, affinityProgress 
     return (
         <Box>
             <Snackbar
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 sx={{ backgroundColor: "white", borderRadius: "5px",marginRight: "-14px !important"  }}
                 open={affinityProgress.open || stanceProgress.open}>
                 <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', width: "100%", marginInline: "4px" }}>

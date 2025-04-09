@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import InfluenceGraph from './components/InfluenceGraph.tsx'
+import App from './components/App..tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <InfluenceGraph />
+    <App />
   </StrictMode>,
 )

@@ -16,7 +16,7 @@ export type Link = {
     date?: string[];
     link_name: string;
 };
-export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string} = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad"};
+export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad" };
 
 export type HeuristicKey = 'mentions_links' | 'global_influence_links' | 'affinities_links';
 
@@ -33,8 +33,8 @@ export const initializeNodes = (ids: string[]): Node[] => {
 
 export const processEdges = (
     data: Array<{ source: string; target: string; influenceValue: number, date?: string[] | undefined, link_name: string }>,
-    setNodes: Dispatch<SetStateAction<Node[]>>, setLinksNames: Dispatch<SetStateAction<{ [key: string]: {cant: number, active: boolean} }>>
-): { links: Link[], maxOutDegree: number} => {
+    setNodes: Dispatch<SetStateAction<Node[]>>, setLinksNames: Dispatch<SetStateAction<{ [key: string]: { cant: number, active: boolean } }>>
+): { links: Link[], maxOutDegree: number } => {
 
     const links: Link[] = [];
     let maxOutDegree = 0;
@@ -99,12 +99,12 @@ export const processEdges = (
     const linksNames = links.reduce((acc, link) => {
         const key = link.link_name || 'null';
         if (!acc[key]) {
-            acc[key]= {cant: 0, active: true};
+            acc[key] = { cant: 0, active: true };
         }
         acc[key].cant = acc[key].cant + 1;
         return acc;
-    }, {} as { [key: string]: {cant: number, active: boolean} });
-    
+    }, {} as { [key: string]: { cant: number, active: boolean } });
+
     setLinksNames(linksNames)
     return { links, maxOutDegree };
 };
@@ -132,26 +132,34 @@ export const getHueIndexColor = (index: number, baseHueColor: number) => {
     return hue;
 }
 
-export const updateOutDegrees = (nodes: Node[], links: Link[])=> {
-  const updatedMap = new Map<string, Node>();
-  nodes.forEach(node => {
-    updatedMap.set(node.id, { ...node, outDegree: 0 });
-  });
+export const updateOutDegrees = (nodes: Node[], links: Link[]) => {
+    const updatedMap = new Map<string, Node>();
+    nodes.forEach(node => {
+        updatedMap.set(node.id, { ...node, outDegree: 0 });
+    });
 
-  links.forEach(link => {
-    const sourceNode = updatedMap.get(link.source);
-    if (sourceNode) {
-      sourceNode.outDegree += 1;
-    }
-  });
+    links.forEach(link => {
+        const sourceNode = updatedMap.get(link.source);
+        if (sourceNode) {
+            sourceNode.outDegree += 1;
+        }
+    });
 
 
-  const updatedNodes = Array.from(updatedMap.values());
+    const updatedNodes = Array.from(updatedMap.values());
 
-  const maxOutDegree = updatedNodes.reduce(
-    (max, node) => Math.max(max, node.outDegree),
-    0
-  );
+    const maxOutDegree = updatedNodes.reduce(
+        (max, node) => Math.max(max, node.outDegree),
+        0
+    );
 
-  return { updatedNodes, maxOutDegree };
+    return { updatedNodes, maxOutDegree };
 }
+
+export const getSafeHue = (): number => {
+    let hue: number;
+    do {
+        hue = Math.floor(Math.random() * 360);
+    } while ((hue >= 0 && hue <= 5) || (hue >= 95 && hue <= 105));
+    return hue;
+};
