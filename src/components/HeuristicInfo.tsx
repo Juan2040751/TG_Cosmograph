@@ -33,7 +33,7 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
             description: "Redes de interacciones basada en popularidad",
             influenceRelation: {
                 Popularidad: "Un nodo con mayor popularidad, medida por sus interacciones, tiene más influencia en los usuarios que interactúan con él",
-                Betweenness: "Un nodo con mayor nivel de intermediación en la red, ejerce más influencia en los usuarios que interactúan con él"
+                Betwenness: "Un nodo con mayor nivel de intermediación en la red, ejerce más influencia en los usuarios que interactúan con él"
             },
         },
         "Afinidad": {

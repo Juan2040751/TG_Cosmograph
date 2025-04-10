@@ -13,7 +13,6 @@ export type Link = {
     source: string;
     target: string;
     influenceValue: number;
-    date?: string[];
     link_name: string;
 };
 export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad" };
@@ -32,7 +31,7 @@ export const initializeNodes = (ids: string[]): Node[] => {
 }
 
 export const processEdges = (
-    data: Array<{ source: string; target: string; influenceValue: number, date?: string[] | undefined, link_name: string }>,
+    data: Array<{ source: string; target: string; influenceValue: number, link_name: string }>,
     setNodes: Dispatch<SetStateAction<Node[]>>, setLinksNames: Dispatch<SetStateAction<{ [key: string]: { cant: number, active: boolean } }>>
 ): { links: Link[], maxOutDegree: number } => {
 
@@ -44,7 +43,7 @@ export const processEdges = (
     const tempNodeData = new Map<string, { outDegree: number, x: number, y: number }>();
 
     data.forEach((row) => {
-        const { source, target, influenceValue, date, link_name } = row;
+        const { source, target, influenceValue, link_name } = row;
         if (!tempNodeData.has(source)) {
             tempNodeData.set(source, {
                 outDegree: 1,
@@ -71,7 +70,6 @@ export const processEdges = (
             source,
             target,
             influenceValue,
-            date,
             link_name
         });
     });

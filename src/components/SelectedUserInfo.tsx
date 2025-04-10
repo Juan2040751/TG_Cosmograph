@@ -42,7 +42,6 @@ const nodeInfo = (props: ListChildComponentProps) => {
     const link: {
         source: string,
         target: string,
-        date?: string[],
         influenceValues: {
             [key: string]: number
         },
@@ -67,7 +66,7 @@ const nodeInfo = (props: ListChildComponentProps) => {
                                 key={index}
                                 label={`${key}: ${(value * 100).toFixed(1)}%`}
                                 size='small'
-                                sx={digraph ? { backgroundColor: `hsl(${getLinkNameColor(key)}, 100%, 60%)`, color: getLinkNameColor(key) == 240 ? "white" : "black" } : { backgroundColor: `hsl(${value < 0 ? 0 : 100}, 100%, 50%)` }}
+                                sx={digraph ? { backgroundColor: `hsl(${getLinkNameColor(key)}, 100%, 60%)`, color: getLinkNameColor(key) === 240 ? "white" : "black" } : { backgroundColor: `hsl(${value < 0 ? 0 : 100}, 100%, 50%)` }}
                             />
                         ))}
                     </Box>}
@@ -87,11 +86,11 @@ const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLink
         ;
     let influencedNodes = nodeLinks.reduce((acc, link) => {
         if (!acc[link.target]) {
-            acc[link.target] = { source: link.source, target: link.target, date: link.date, influenceValues: {} };
+            acc[link.target] = { source: link.source, target: link.target, influenceValues: {} };
         }
         acc[link.target].influenceValues[link.link_name] = link.influenceValue
         return acc
-    }, {} as { [key: string]: { source: string, target: string, date?: string[], influenceValues: { [key: string]: number } } })
+    }, {} as { [key: string]: { source: string, target: string, influenceValues: { [key: string]: number } } })
     const nodeInfluenced = Object.values(influencedNodes)
     interface ExpandMoreProps extends IconButtonProps {
         expand: boolean;
