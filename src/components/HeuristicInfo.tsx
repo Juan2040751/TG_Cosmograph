@@ -5,14 +5,16 @@ import FiberSmartRecordIcon from '@mui/icons-material/FiberSmartRecord';
 import HubIcon from '@mui/icons-material/Hub';
 import { Accordion, AccordionDetails, AccordionSummary, Divider, FormControlLabel, FormGroup, Typography, Checkbox } from '@mui/material';
 import "./styles.css";
-import { getHueIndexColor } from '../data';
+import { getHueIndexColor, Node } from '../data';
 import { Dispatch, SetStateAction } from 'react';
+import Histogram from './Histogram';
 
-const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames, filterLinks }: {
+const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames, filterLinks, maxOutDegree }: {
     heuristicLabel: string | undefined, baseHueColor: number, linksNames: { [key: string]: { cant: number, active: boolean } },
     setLinksNames: Dispatch<SetStateAction<{
         [key: string]: { active: boolean, cant: number }
-    }>>, filterLinks: (activeLinksNames: string[])=> void
+    }>>, filterLinks: (activeLinksNames: string[], ) => void,
+    maxOutDegree: number
 }) => {
     const heuristicsDescriptions = {
         "Interacciones": {
@@ -71,7 +73,7 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                                         onChange={({ target }) => {
                                             setLinksNames(prev => {
                                                 prev[linkName].active = target.checked
-       
+
                                                 const activeLinksNames: string[] = Object.entries(prev)
                                                     .filter(([_, value]) => value.active)
                                                     .map(([key]) => key)
@@ -83,6 +85,8 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                                 label={`${linkName} (${linksNames[linkName].cant} aristas)`} />)
                     }
                 </FormGroup>
+                <Divider />
+                <Histogram baseHueColor={baseHueColor} maxOutDegree={maxOutDegree}/> 
             </AccordionDetails>
         </Accordion>
     )

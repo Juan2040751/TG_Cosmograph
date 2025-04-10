@@ -157,7 +157,7 @@ const App = () => {
             >
                 <TopBar handleFileUpload={handleFileUpload} search={search} handleChangeHeuristic={handleChangeHeuristic} onSearchSelectResult={onSearchSelectResult} heuristic={heuristic} heuristicsLinks={heuristicsLinks} links={filteredlinks} nodes={nodes} />
                 <Box sx={{ position: "relative" }}>
-                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} />
+                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} maxOutDegree={maxOutDegree}/>
                     <Snackbar open={preprocessError.open} autoHideDuration={30000} onClose={handleClose}>
                         <Alert
                             onClose={handleClose}

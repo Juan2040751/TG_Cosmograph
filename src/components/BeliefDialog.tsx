@@ -82,7 +82,7 @@ const BeliefDialog = ({
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>Cancelar</Button>
-                <Button type="submit">Analizar Dataset</Button>
+                <Button type="submit" variant="contained">Analizar Dataset</Button>
             </DialogActions>
         </Dialog>
     );
