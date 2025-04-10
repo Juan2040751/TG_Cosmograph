@@ -3,49 +3,68 @@ import BlurCircularIcon from '@mui/icons-material/BlurCircular';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import FiberSmartRecordIcon from '@mui/icons-material/FiberSmartRecord';
 import HubIcon from '@mui/icons-material/Hub';
-import { Accordion, AccordionDetails, AccordionSummary, Divider, FormControlLabel, FormGroup, Typography, Checkbox } from '@mui/material';
-import "./styles.css";
-import { getHueIndexColor, Node } from '../data';
+import { Accordion, AccordionDetails, AccordionSummary, Checkbox, Divider, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import { Dispatch, SetStateAction } from 'react';
+import { getHueIndexColor } from '../data';
 import Histogram from './Histogram';
+import "./styles.css";
 
 const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames, filterLinks, maxOutDegree }: {
     heuristicLabel: string | undefined, baseHueColor: number, linksNames: { [key: string]: { cant: number, active: boolean } },
     setLinksNames: Dispatch<SetStateAction<{
         [key: string]: { active: boolean, cant: number }
-    }>>, filterLinks: (activeLinksNames: string[], ) => void,
+    }>>, filterLinks: (activeLinksNames: string[],) => void,
     maxOutDegree: number
 }) => {
-    const heuristicsDescriptions = {
+    const heuristicsDescriptions: {
+        [key: string]: {
+            description: string, influenceRelation: { [key: string]: string }
+        }
+    } = {
         "Interacciones": {
-            description: "Red de menciones entre usuarios",
-            influenceRelation: "Una arista indica que el usuario influenciado ha interactuado con el usuario influenciador",
+            description: "Redes basadas en interacciones entre usuarios",
+            influenceRelation: {
+                Interacciones: "Una arista indica que el usuario influenciado ha interactuado con el usuario influenciador",
+                Retweets: "Una arista indica que el usuario influenciado ha retwitteado al usuario influenciador",
+                Menciones: "Una arista indica que el usuario influenciado ha mencionado al usuario influenciador"
+            },
         },
         "Popularidad": {
-            description: "Red de menciones basada en popularidad",
-            influenceRelation: "Un nodo con mayor popularidad, medida por sus interacciones, tiene más influencia en los usuarios que interactúan con él",
+            description: "Redes de interacciones basada en popularidad",
+            influenceRelation: {
+                Popularidad: "Un nodo con mayor popularidad, medida por sus interacciones, tiene más influencia en los usuarios que interactúan con él",
+                Betweenness: "Un nodo con mayor nivel de intermediación en la red, ejerce más influencia en los usuarios que interactúan con él"
+            },
         },
         "Afinidad": {
-            description: "Red de similitud de opiniones",
-            influenceRelation: "La influencia entre usuarios se basa en la similitud de sus opiniones frente al tema, considerando su sintaxis y semántica"
+            description: "Redes de similitud de opiniones",
+            influenceRelation: {
+                Afinidad: "La influencia entre usuarios se basa en la similitud de sus opiniones y creencias frente al tema, considerando su sintaxis y semántica",
+                "Acuerdo/Desacuerdo": "La influencia entre usuarios se basa en la similitud de sus creencias frente al tema"
+            }
         }
     }
-    const heuristicDetails = heuristicLabel ? heuristicsDescriptions[heuristicLabel as ("Interacciones" | "Popularidad" | "Afinidad")] : undefined
+    const heuristicDetails = heuristicLabel ? heuristicsDescriptions[heuristicLabel] : undefined
     const nodeColor = `hsl(${baseHueColor}, 100%, 50%)`
     return (
         heuristicDetails && <Accordion defaultExpanded
-            sx={{ position: "absolute", maxWidth: "400px", right: "12px", top: "16px", zIndex: 1 }}>
+            sx={{ position: "absolute", maxWidth: "400px", right: "10px", top: "15px", zIndex: 1 }}>
             <AccordionSummary
                 expandIcon={<ArrowDownwardIcon />}
-                sx={{ padding: "0px 8px" }}
+                sx={{ padding: "0px 8px", minHeight: "45px !important" }}
             >
                 <Typography variant='body1' >{heuristicDetails.description}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-                <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                    <HubIcon sx={{ color: nodeColor }} />
-                    {heuristicDetails.influenceRelation}
-                </Typography>
+            <AccordionDetails sx={{ padding: "0px 16px 0px !important"}}>
+                {
+                    Object.keys(linksNames).map((linkName, index) => (
+                        linksNames[linkName].active &&
+                        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }} key={index}>
+                            <HubIcon sx={{ color: `hsl(${getHueIndexColor(index, baseHueColor)}, 100%, 50%)` }} />
+                            {heuristicDetails.influenceRelation[linkName]}
+                        </Typography>))
+                }
+
                 <Typography gutterBottom variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }}>
                     <FiberManualRecordIcon sx={{ color: nodeColor }} />
                     Cada nodo es una cuenta de usuario en X
@@ -86,7 +105,7 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                     }
                 </FormGroup>
                 <Divider />
-                <Histogram baseHueColor={baseHueColor} maxOutDegree={maxOutDegree}/> 
+                <Histogram baseHueColor={baseHueColor} maxOutDegree={maxOutDegree} />
             </AccordionDetails>
         </Accordion>
     )
