@@ -49,10 +49,10 @@ const InfluenceGraph = ({ maxOutDegree, linksNames, baseHueColor, cosmographRef,
 
       simulationGravity={0.5}
       simulationRepulsion={300}//
-      simulationRepulsionTheta={2}//1
+      simulationRepulsionTheta={1}//1
       simulationLinkSpring={1}//1
-      simulationLinkDistance={50}
-      simulationFriction={0.5}
+      simulationLinkDistance={100}
+      simulationFriction={0.75}
       disableSimulation={false}
       showDynamicLabels
       renderHoveredNodeRing

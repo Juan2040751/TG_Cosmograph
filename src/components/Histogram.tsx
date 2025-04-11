@@ -13,10 +13,12 @@ const Histogram = ({ baseHueColor, maxOutDegree }: { baseHueColor: number, maxOu
     useEffect(() => {
         const axisElement = axisRef.current;
         if (!axisElement) return;
-
+        const histogramElement = document.getElementById("CosmographHistogram");
+        const rectHistogramWidth = histogramElement?.getBoundingClientRect().width ?? 368;
+        console.log(rectHistogramWidth)
         const scale = d3.scaleLinear()
             .domain([histoValue === "outDegree" ? 0 : -1, histoValue === "outDegree" ? maxOutDegree : 100])
-            .range([0, 348]);
+            .range([0, rectHistogramWidth-10]);
 
         const axis = d3.axisBottom(scale)
             .ticks(10)
