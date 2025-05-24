@@ -33,14 +33,14 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
             description: "Redes de interacciones basada en popularidad",
             influenceRelation: {
                 Popularidad: "Un nodo con mayor popularidad, medida por sus interacciones, tiene más influencia en los usuarios que interactúan con él",
-                Betwenness: "Un nodo con mayor nivel de intermediación en la red, ejerce más influencia en los usuarios que interactúan con él"
+                Betweenness: "Un nodo con mayor nivel de intermediación en la red, ejerce más influencia en los usuarios que interactúan con él"
             },
         },
         "Afinidad": {
             description: "Redes de similitud de opiniones",
             influenceRelation: {
                 Afinidad: "La influencia entre usuarios se basa en la similitud de sus opiniones y creencias frente al tema, considerando su sintaxis y semántica",
-                "Acuerdo/Desacuerdo": "La influencia entre usuarios se basa en la similitud de sus creencias frente al tema"
+                Retweets: "Una arista indica que el usuario influenciado ha retwitteado al usuario influenciador",
             }
         }
     }
@@ -48,17 +48,16 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
     const nodeColor = `hsl(${baseHueColor}, 100%, 50%)`
     return (
         heuristicDetails && <Accordion defaultExpanded
-            sx={{ position: "absolute", maxWidth: "400px", right: "10px", top: "15px", zIndex: 1 }}>
+            sx={{ position: "absolute", maxWidth: "400px", right: "10px", top: "15px", zIndex: 1}}>
             <AccordionSummary
                 expandIcon={<ArrowDownwardIcon />}
                 sx={{ padding: "0px 8px", minHeight: "45px !important" }}
             >
                 <Typography variant='body1' >{heuristicDetails.description}</Typography>
             </AccordionSummary>
-            <AccordionDetails sx={{ padding: "0px 16px 0px !important"}}>
+            <AccordionDetails sx={{ padding: "0px 12px 0px !important", overflowY:"auto", maxHeight: "calc(100dvh - 140px)", scrollbarColor: "auto"}}>
                 {
                     Object.keys(linksNames).map((linkName, index) => (
-                        linksNames[linkName].active &&
                         <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }} key={index}>
                             <HubIcon sx={{ color: `hsl(${getHueIndexColor(index, baseHueColor)}, 100%, 50%)` }} />
                             {heuristicDetails.influenceRelation[linkName]}
@@ -71,7 +70,7 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                 </Typography>
                 <Typography gutterBottom variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }} >
                     <FiberSmartRecordIcon sx={{ color: nodeColor }} />
-                    El tamaño del nodo representa la cantidad de otras cuentas que el usuario influencia.
+                    El tamaño del nodo representa la cantidad de cuentas que el usuario influencia.
                 </Typography>
                 <Typography gutterBottom variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }}>
                     <BlurCircularIcon sx={{ color: nodeColor }} />

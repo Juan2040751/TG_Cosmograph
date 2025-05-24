@@ -14,7 +14,7 @@ const Histogram = ({ baseHueColor, maxOutDegree }: { baseHueColor: number, maxOu
         const axisElement = axisRef.current;
         if (!axisElement) return;
         const histogramElement = document.getElementById("CosmographHistogram");
-        const rectHistogramWidth = histogramElement?.getBoundingClientRect().width ?? 368;
+        const rectHistogramWidth = histogramElement?.getBoundingClientRect().width ?? 348;
         console.log(rectHistogramWidth)
         const scale = d3.scaleLinear()
             .domain([histoValue === "outDegree" ? 0 : -1, histoValue === "outDegree" ? maxOutDegree : 100])
@@ -39,7 +39,7 @@ const Histogram = ({ baseHueColor, maxOutDegree }: { baseHueColor: number, maxOu
     };
 
     return (
-        <Box position="relative">
+        <Box position="relative" width={358}>
             <Typography variant='body1' sx={{ marginTop: "8px" }}>Nodos</Typography>
             <FormControl fullWidth variant='standard' sx={{ m: 1, width: 340 }}>
                 <InputLabel>Histograma</InputLabel>
@@ -68,7 +68,7 @@ const Histogram = ({ baseHueColor, maxOutDegree }: { baseHueColor: number, maxOu
                 labelSideMargin={0}
 
             />
-            <svg width={375} height={20}>
+            <svg width={368} height={20}>
                 <g ref={axisRef} transform="translate(5, 0)" />
             </svg>
 

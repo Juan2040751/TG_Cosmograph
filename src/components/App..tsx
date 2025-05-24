@@ -22,7 +22,9 @@ const App = () => {
     const [heuristic, setHeuristic] = useState<string>('');
     const [preprocessError, setPreprocessError] = useState<{ open: boolean, message: string }>({ open: false, message: "" });
     const [stanceProgress, setStanceProgress] = useState<{ users: number, progress: number, processing: number, open: boolean, estimatedTime: number, batches: number }>({ users: 0, progress: 0, processing: 0, open: false, estimatedTime: 60, batches: 0 });
-    const [affinityProgress, setAffinityProgress] = useState<{ users: number, progress: number, open: boolean }>({ users: 0, progress: 0, open: false });
+    const [affinityProgress, setAffinityProgress] = useState<{ users: number, progress: number, open: boolean, buffer: number }>({ users: 0, progress: 0, open: false, buffer: 0 });
+    const [progressFeedback, setProgressFeedback] = useState<{ message: string, open: boolean }>({ message: "", open: false });
+    const [influenceProgress, setInfluenceProgress] = useState<{ progress: number, open: boolean, message: string }>({ progress: 0, open: false, message: "" });
     const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
     const [selectedNode, setSelectedNode] = useState<Node | undefined>();
     const search = useRef<CosmographSearchRef<Node, Link>>(null);
@@ -39,6 +41,8 @@ const App = () => {
                     const csvBase64 = (reader.result as string).split(',')[1];
                     sendCSV(csvBase64, topicInfo)
                     socket.on("preprocess_error", (errorMessage: string) => setPreprocessError({ open: true, message: errorMessage }))
+                    socket.on("progress_feedback", (feedback: { message: string, open: boolean }) => {setProgressFeedback(feedback); console.log(feedback)})
+                    socket.on("influence_progress", (feedback: { progress: number, open: boolean, message: string }) => setInfluenceProgress(feedback))
                     socket.on("users", (ids: string[]) => setNodes(initializeNodes(ids)));
                     receiveInfluenceHeuristic(setHeuristicsLinks, setLinks, setAffinityProgress, setMaxOutDegree, setHeuristic, setNodes, cosmographRef, setLinksNames)
                     socket.on("stance_time", (stanceTime) => setStanceProgress({
@@ -51,6 +55,7 @@ const App = () => {
                     })
                     socket.on("confidence_heuristic", confidences => processConfidence(confidences, setNodes))
                     socket.on("affinity_work_info", affinityUsers => setAffinityProgress(prev => { return { ...prev, users: affinityUsers, open: true } }))
+                    socket.on("affinity_work_buffer", affinityUsersBuffer => setAffinityProgress(prev => { return { ...prev, buffer: affinityUsersBuffer, open: true } }))
                     socket.on("affinity_work", affinityProgress => setAffinityProgress(prev => { return { ...prev, progress: affinityProgress } }))
                 }
             };
@@ -96,14 +101,12 @@ const App = () => {
         setHeuristic(event.target.value);
     }
     const filterLinks = (activeLinksNames: string[]) => {
-        const filtered = links.filter(link => activeLinksNames.includes(link.link_name));
+        const filtered = links.filter(link => activeLinksNames.includes(link.linkName));
         setFilteredLinks(filtered);
         const { updatedNodes, maxOutDegree } = updateOutDegrees(nodes, filtered);
         setNodes(updatedNodes);
         setMaxOutDegree(maxOutDegree);
         setDigraph(!(activeLinksNames.length === 1 && activeLinksNames[0] === "Acuerdo/Desacuerdo"))
-        cosmographRef.current?.fitView();
-        cosmographRef.current?.setZoomLevel(0.1, 2000)
     }
 
     const onCosmographClick = useCallback<
@@ -157,7 +160,7 @@ const App = () => {
             >
                 <TopBar handleFileUpload={handleFileUpload} search={search} handleChangeHeuristic={handleChangeHeuristic} onSearchSelectResult={onSearchSelectResult} heuristic={heuristic} heuristicsLinks={heuristicsLinks} links={filteredlinks} nodes={nodes} />
                 <Box sx={{ position: "relative" }}>
-                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} maxOutDegree={maxOutDegree}/>
+                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} maxOutDegree={maxOutDegree} />
                     <Snackbar open={preprocessError.open} autoHideDuration={30000} onClose={handleClose}>
                         <Alert
                             onClose={handleClose}
@@ -169,13 +172,12 @@ const App = () => {
                         </Alert>
                     </Snackbar>
                     <InfluenceGraph maxOutDegree={maxOutDegree} linksNames={linksNames} baseHueColor={baseHueColor} cosmographRef={cosmographRef} showLabelsFor={showLabelsFor} onCosmographClick={onCosmographClick} />
-                    {/**<Timeline baseHueColor={baseHueColor} />*/}
                 </Box>
             </CosmographProvider>
             {selectedNode && <SelectedUserInfo selectedNode={selectedNode} getNode={getNode}
                 links={filteredlinks} showLinkNodes={showLinkNodes} digraph={digraph} getLinkNameColor={getLinkNameColor} />
             }
-            {<ProgressFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} />}
+            {<ProgressFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} progressFeedback={progressFeedback} influenceProgress={influenceProgress}/>}
         </Box>
     );
 };

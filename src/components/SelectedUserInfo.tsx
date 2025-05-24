@@ -66,7 +66,7 @@ const nodeInfo = (props: ListChildComponentProps) => {
                                 key={index}
                                 label={`${key}: ${(value * 100).toFixed(1)}%`}
                                 size='small'
-                                sx={digraph ? { backgroundColor: `hsl(${getLinkNameColor(key)}, 100%, 60%)`, color: getLinkNameColor(key) === 240 ? "white" : "black" } : { backgroundColor: `hsl(${value < 0 ? 0 : 100}, 100%, 50%)` }}
+                                sx={digraph ? { backgroundColor: `hsl(${getLinkNameColor(key)}, 100%, 65%)`, color: "black"  } : { backgroundColor: `hsl(${value < 0 ? 0 : 100}, 100%, 50%)` }}
                             />
                         ))}
                     </Box>}
@@ -81,14 +81,14 @@ const nodeInfo = (props: ListChildComponentProps) => {
 const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLinkNameColor, getNode }: { selectedNode: Node, links: Link[], showLinkNodes: (link: Link) => void, digraph: boolean, getLinkNameColor: (name: string) => number, getNode: (id: string) => Node | undefined }) => {
     const [expanded, setExpanded] = useState(false);
     let nodeLinks: Link[] = links
-        .filter(link => link.source === selectedNode?.id || (link.link_name === "Acuerdo/Desacuerdo" && link.target === selectedNode?.id) )
+        .filter(link => link.source === selectedNode?.id || (link.linkName === "Acuerdo/Desacuerdo" && link.target === selectedNode?.id) )
         .sort((a, b) => a.target.localeCompare(b.target))
         ;
     let influencedNodes = nodeLinks.reduce((acc, link) => {
         if (!acc[link.target]) {
             acc[link.target] = { source: link.source, target: link.target, influenceValues: {} };
         }
-        acc[link.target].influenceValues[link.link_name] = link.influenceValue
+        acc[link.target].influenceValues[link.linkName] = link.influenceValue
         return acc
     }, {} as { [key: string]: { source: string, target: string, influenceValues: { [key: string]: number } } })
     const nodeInfluenced = Object.values(influencedNodes)
@@ -189,7 +189,7 @@ const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLink
                     sx={{ width: '100%', bgcolor: 'background.paper' }}
                 >
                     <FixedSizeList
-                        height={550}
+                        height={615}
                         width={450}
                         itemSize={46}
                         itemCount={nodeInfluenced.length}

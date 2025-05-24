@@ -13,7 +13,7 @@ export type Link = {
     source: string;
     target: string;
     influenceValue: number;
-    link_name: string;
+    linkName: string;
 };
 export const heuristicLabel: { mentions_links: string, global_influence_links: string, affinities_links: string } = { mentions_links: "Interacciones", global_influence_links: "Popularidad", affinities_links: "Afinidad" };
 
@@ -31,7 +31,7 @@ export const initializeNodes = (ids: string[]): Node[] => {
 }
 
 export const processEdges = (
-    data: Array<{ source: string; target: string; influenceValue: number, link_name: string }>,
+    data: Array<{ source: string; target: string; influenceValue: number, linkName: string }>,
     setNodes: Dispatch<SetStateAction<Node[]>>, setLinksNames: Dispatch<SetStateAction<{ [key: string]: { cant: number, active: boolean } }>>
 ): { links: Link[], maxOutDegree: number } => {
 
@@ -43,7 +43,7 @@ export const processEdges = (
     const tempNodeData = new Map<string, { outDegree: number, x: number, y: number }>();
 
     data.forEach((row) => {
-        const { source, target, influenceValue, link_name } = row;
+        const { source, target, influenceValue, linkName } = row;
         if (!tempNodeData.has(source)) {
             tempNodeData.set(source, {
                 outDegree: 1,
@@ -70,7 +70,7 @@ export const processEdges = (
             source,
             target,
             influenceValue,
-            link_name
+            linkName: linkName
         });
     });
 
@@ -95,7 +95,7 @@ export const processEdges = (
     );
 
     const linksNames = links.reduce((acc, link) => {
-        const key = link.link_name || 'null';
+        const key = link.linkName || 'null';
         if (!acc[key]) {
             acc[key] = { cant: 0, active: true };
         }
@@ -158,6 +158,6 @@ export const getSafeHue = (): number => {
     let hue: number;
     do {
         hue = Math.floor(Math.random() * 360);
-    } while ((hue >= 0 && hue <= 5) || (hue >= 95 && hue <= 105));
+    } while ((hue >= 0 && hue <= 10) || (hue >= 90 && hue <= 110));
     return hue;
 };

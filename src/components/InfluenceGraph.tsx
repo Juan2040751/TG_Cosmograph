@@ -21,9 +21,9 @@ const InfluenceGraph = ({ maxOutDegree, linksNames, baseHueColor, cosmographRef,
 
   const getLinkColor = (link: Link) => {
     const linkKeys = Object.keys(linksNames);
-    const keyIndex = linkKeys.indexOf(link.link_name);
+    const keyIndex = linkKeys.indexOf(link.linkName);
 
-    const hue = link.link_name !== "Acuerdo/Desacuerdo" ? getHueIndexColor(keyIndex, baseHueColor) : link?.influenceValue < 0 ? 0 : 100;
+    const hue = link.linkName !== "Acuerdo/Desacuerdo" ? getHueIndexColor(keyIndex, baseHueColor) : link?.influenceValue < 0 ? 0 : 100;
     const saturation = Math.round(Math.abs(link?.influenceValue) * 100);
     const lightness = 100 - saturation / 2;
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
@@ -38,7 +38,7 @@ const InfluenceGraph = ({ maxOutDegree, linksNames, baseHueColor, cosmographRef,
       onClick={onCosmographClick}
       showLabelsFor={showLabelsFor}
       simulationCenter={-1}
-      nodeSize={(node: Node) => node.outDegree / 1.5}
+      nodeSize={(node: Node) => Math.min(1500, node.outDegree / 1.5)}
       nodeColor={getNodeColor}
       nodeLabelColor={"white"}
       hoveredNodeLabelColor={`hsl(${baseHueColor}, 100%, 50%)`}
@@ -47,12 +47,12 @@ const InfluenceGraph = ({ maxOutDegree, linksNames, baseHueColor, cosmographRef,
       linkWidth={(link: Link) => Math.abs(link.influenceValue) ?? 0.1}
       linkColor={getLinkColor}
 
-      simulationGravity={0.5}
-      simulationRepulsion={300}//
-      simulationRepulsionTheta={1}//1
+      simulationGravity={0.6}
+      simulationRepulsion={200}//
+      simulationRepulsionTheta={1.7}//1
       simulationLinkSpring={1}//1
       simulationLinkDistance={100}
-      simulationFriction={0.75}
+      simulationFriction={1}
       disableSimulation={false}
       showDynamicLabels
       renderHoveredNodeRing

@@ -15,12 +15,13 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
     users: number;
     progress: number;
     open: boolean;
+    buffer: number;
 }>>, setMaxOutDegree: Dispatch<SetStateAction<number>>,
     setHeuristic: Dispatch<SetStateAction<string>>,
     setNodes: Dispatch<SetStateAction<Node[]>>,
     cosmographRef: RefObject<CosmographRef<Node, Link>>, 
     setLinksNames: Dispatch<SetStateAction<{ [key: string]: {cant: number, active: boolean} }>>) => {
-    socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number, date?:string[], link_name: string }> }) => {
+    socket.on("influence_heuristic", (heuristic: { heuristic: Array<{ source: string; target: string; influenceValue: number, linkName: string }> }) => {
         Object.entries(heuristic).forEach(([heuristicName, heuristicLinks]) => {
             setHeuristicsLinks(prev => ({
                 ...prev,
@@ -32,7 +33,7 @@ export const receiveInfluenceHeuristic = (setHeuristicsLinks: Dispatch<SetStateA
                     const { links, maxOutDegree } = processEdges(heuristicLinks, setNodes, setLinksNames)
                     setMaxOutDegree(maxOutDegree);
                     cosmographRef.current?.fitView();
-                    cosmographRef.current?.setZoomLevel(0.2, 3000)
+                    cosmographRef.current?.setZoomLevel(0.1, 3000)
                     setHeuristic(heuristicName);
                     return links
                 }
