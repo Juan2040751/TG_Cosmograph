@@ -10,6 +10,7 @@ import "./styles.css";
 //import Timeline from './Timeline';
 import InfluenceGraph from './InfluenceGraph';
 import TopBar from './TopBar';
+import Histogram from './Histogram';
 
 const App = () => {
     const [nodes, setNodes] = useState<Node[]>([]);
@@ -28,6 +29,7 @@ const App = () => {
     const cosmographRef = useRef<CosmographRef<Node, Link>>(null);
     const [selectedNode, setSelectedNode] = useState<Node | undefined>();
     const search = useRef<CosmographSearchRef<Node, Link>>(null);
+    const [nodesInfo, setNodesInfo] = useState<{ confidence: boolean, belief: boolean, degree: boolean }>({ confidence: false, belief: false, degree: false });
     const [showLabelsFor, setShowLabelsFor] = useState<Node[]>(
         []
     );
@@ -41,7 +43,7 @@ const App = () => {
                     const csvBase64 = (reader.result as string).split(',')[1];
                     sendCSV(csvBase64, topicInfo)
                     socket.on("preprocess_error", (errorMessage: string) => setPreprocessError({ open: true, message: errorMessage }))
-                    socket.on("progress_feedback", (feedback: { message: string, open: boolean }) => {setProgressFeedback(feedback); console.log(feedback)})
+                    socket.on("progress_feedback", (feedback: { message: string, open: boolean }) => setProgressFeedback(feedback))
                     socket.on("influence_progress", (feedback: { progress: number, open: boolean, message: string }) => setInfluenceProgress(feedback))
                     socket.on("users", (ids: string[]) => setNodes(initializeNodes(ids)));
                     receiveInfluenceHeuristic(setHeuristicsLinks, setLinks, setAffinityProgress, setMaxOutDegree, setHeuristic, setNodes, cosmographRef, setLinksNames)
@@ -52,8 +54,9 @@ const App = () => {
                     socket.on("belief_heuristic", stances => {
                         processStance(stances, setNodes);
                         setStanceProgress(prev => { return { ...prev, open: false } });
+                        setNodesInfo(prev => { return { ...prev, belief: true } });
                     })
-                    socket.on("confidence_heuristic", confidences => processConfidence(confidences, setNodes))
+                    socket.on("confidence_heuristic", confidences => { processConfidence(confidences, setNodes); setNodesInfo(prev => { return { ...prev, confidence: true } }) })
                     socket.on("affinity_work_info", affinityUsers => setAffinityProgress(prev => { return { ...prev, users: affinityUsers, open: true } }))
                     socket.on("affinity_work_buffer", affinityUsersBuffer => setAffinityProgress(prev => { return { ...prev, buffer: affinityUsersBuffer, open: true } }))
                     socket.on("affinity_work", affinityProgress => setAffinityProgress(prev => { return { ...prev, progress: affinityProgress } }))
@@ -138,6 +141,7 @@ const App = () => {
 
     useEffect(() => {
         setFilteredLinks(links)
+        setNodesInfo(prev => { return { ...prev, degree: links.length !== 0 } });
     }, [links])
 
 
@@ -151,7 +155,6 @@ const App = () => {
         }
         setPreprocessError({ open: false, message: "" });
     };
-
     return (
         <Box sx={{ height: "100px !important" }}>
             <CosmographProvider
@@ -160,7 +163,7 @@ const App = () => {
             >
                 <TopBar handleFileUpload={handleFileUpload} search={search} handleChangeHeuristic={handleChangeHeuristic} onSearchSelectResult={onSearchSelectResult} heuristic={heuristic} heuristicsLinks={heuristicsLinks} links={filteredlinks} nodes={nodes} />
                 <Box sx={{ position: "relative" }}>
-                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} maxOutDegree={maxOutDegree} />
+                    <HeuristicInfo heuristicLabel={heuristicLabel[heuristic as HeuristicKey]} baseHueColor={baseHueColor} linksNames={linksNames} setLinksNames={setLinksNames} filterLinks={filterLinks} />
                     <Snackbar open={preprocessError.open} autoHideDuration={30000} onClose={handleClose}>
                         <Alert
                             onClose={handleClose}
@@ -171,13 +174,14 @@ const App = () => {
                             {preprocessError.message}
                         </Alert>
                     </Snackbar>
+                    {Object.values(nodesInfo).some(value => value) && <Histogram baseHueColor={baseHueColor} maxOutDegree={maxOutDegree} nodes={nodes} nodesInfo={nodesInfo}/>}
                     <InfluenceGraph maxOutDegree={maxOutDegree} linksNames={linksNames} baseHueColor={baseHueColor} cosmographRef={cosmographRef} showLabelsFor={showLabelsFor} onCosmographClick={onCosmographClick} />
                 </Box>
             </CosmographProvider>
             {selectedNode && <SelectedUserInfo selectedNode={selectedNode} getNode={getNode}
                 links={filteredlinks} showLinkNodes={showLinkNodes} digraph={digraph} getLinkNameColor={getLinkNameColor} />
             }
-            {<ProgressFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} progressFeedback={progressFeedback} influenceProgress={influenceProgress}/>}
+            {<ProgressFeedback stanceProgress={stanceProgress} setStanceProgress={setStanceProgress} affinityProgress={affinityProgress} progressFeedback={progressFeedback} influenceProgress={influenceProgress} />}
         </Box>
     );
 };

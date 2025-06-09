@@ -123,7 +123,7 @@ const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLink
     };
     return (
         <div className="infoStyle">
-            <Card sx={{ width: "100%", gap: 1, overflow: "clip" }}>
+            <Card sx={{ width: "100%", gap: 1, overflow: "clip" }} elevation={10}>
                 <CardContent
                     sx={{
                         padding: "8px !important",
@@ -190,7 +190,7 @@ const SelectedUserInfo = ({ selectedNode, links, showLinkNodes, digraph, getLink
                 >
                     <FixedSizeList
                         height={615}
-                        width={450}
+                        width={500}
                         itemSize={46}
                         itemCount={nodeInfluenced.length}
                         itemData={{ nodeInfluenced, showLinkNodes, digraph, getLinkNameColor, getNode }}

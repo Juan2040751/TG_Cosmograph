@@ -6,15 +6,13 @@ import HubIcon from '@mui/icons-material/Hub';
 import { Accordion, AccordionDetails, AccordionSummary, Checkbox, Divider, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import { Dispatch, SetStateAction } from 'react';
 import { getHueIndexColor } from '../data';
-import Histogram from './Histogram';
 import "./styles.css";
 
-const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames, filterLinks, maxOutDegree }: {
+const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames, filterLinks }: {
     heuristicLabel: string | undefined, baseHueColor: number, linksNames: { [key: string]: { cant: number, active: boolean } },
     setLinksNames: Dispatch<SetStateAction<{
         [key: string]: { active: boolean, cant: number }
     }>>, filterLinks: (activeLinksNames: string[],) => void,
-    maxOutDegree: number
 }) => {
     const heuristicsDescriptions: {
         [key: string]: {
@@ -58,7 +56,7 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
             <AccordionDetails sx={{ padding: "0px 12px 0px !important", overflowY:"auto", maxHeight: "calc(100dvh - 140px)", scrollbarColor: "auto"}}>
                 {
                     Object.keys(linksNames).map((linkName, index) => (
-                        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }} key={index}>
+                        <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: "3px" }} key={index} color={linksNames[linkName].active ? "": "textDisabled"}>
                             <HubIcon sx={{ color: `hsl(${getHueIndexColor(index, baseHueColor)}, 100%, 50%)` }} />
                             {heuristicDetails.influenceRelation[linkName]}
                         </Typography>))
@@ -103,8 +101,6 @@ const HeuristicInfo = ({ heuristicLabel, baseHueColor, linksNames, setLinksNames
                                 label={`${linkName} (${linksNames[linkName].cant} aristas)`} />)
                     }
                 </FormGroup>
-                <Divider />
-                <Histogram baseHueColor={baseHueColor} maxOutDegree={maxOutDegree} />
             </AccordionDetails>
         </Accordion>
     )

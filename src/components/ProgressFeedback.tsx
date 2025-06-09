@@ -61,14 +61,16 @@ function ProgressFeedback({ stanceProgress, setStanceProgress, affinityProgress,
                                 variant="buffer"
                                 value={Math.round(100 * stanceProgress.progress / stanceProgress.users)}
                                 valueBuffer={Math.round(100 * buffer / stanceProgress.users)}
+                                sx={{ minWidth: "230px" }}
                             />}
                             {affinityProgress.open && <LinearProgress
                                 variant="buffer"
                                 value={Math.round(100 * affinityProgress.progress)}
                                 valueBuffer={Math.round(100 * affinityProgress.buffer)}
+                                sx={{ minWidth: "230px" }}
                             />}
-                            {progressFeedback.open && <LinearProgress/>}
-                            {influenceProgress.open && <LinearProgress variant="determinate" value={Math.round(100 * influenceProgress.progress)} />}
+                            {progressFeedback.open && <LinearProgress sx={{ minWidth: "230px" }} />}
+                            {influenceProgress.open && <LinearProgress variant="determinate" value={Math.round(100 * influenceProgress.progress)} sx={{ minWidth: "230px" }} />}
                         </Box>
                         <Box >
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>

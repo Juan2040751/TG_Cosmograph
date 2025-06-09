@@ -130,7 +130,7 @@ function TopBar({ handleFileUpload, search, handleChangeHeuristic, onSearchSelec
             />
             <Box sx={{ minWidth: 200, color: "text.primary" }}>
                 <FormControl fullWidth variant='standard'>
-                    <InputLabel>Heuristica</InputLabel>
+                    <InputLabel>Medida de Influencia</InputLabel>
                     <Select
                         value={heuristic}
                         label="Heuristica"
